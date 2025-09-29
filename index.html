@@ -144,7 +144,31 @@
 				{ name: "Toulouse", icao: "LFBO", iata: "TLS" },
 				{ name: "Vitoria", icao: "LEVT", iata: "VIT" },    ];
 
-    function kleurCodeerTekst(tekst) {
+async function fetchWithRetry(url, retries = 3, delay = 1000) {
+    const proxies = [
+      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+      u => `https://thingproxy.freeboard.io/fetch/${u}`
+    ];
+
+    for (const proxy of proxies) {
+      for (let i = 0; i < retries; i++) {
+        try {
+          const response = await fetch(proxy(url));
+          if (!response.ok) throw new Error(`Foutstatus: ${response.status}`);
+          return await response.json(); // meteen JSON teruggeven
+        } catch (error) {
+          if (i < retries - 1) {
+            await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+          } else {
+            console.warn(`Proxy mislukt (${proxy(url)}), poging ${i + 1}/${retries}`);
+          }
+        }
+      }
+    }
+    throw new Error("Alle proxies en pogingen zijn mislukt.");
+  }
+
+  function kleurCodeerTekst(tekst) {
   if (!tekst) return tekst;
 
   const fenomenen = [
@@ -201,146 +225,113 @@
   }).join('\n');
 }
 
-   // Proxy fetcher: geeft volledige Response terug
-async function fetchWithRetry(url, retries = 3, delay = 1000) {
-  const proxies = [
-    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-    u => `https://thingproxy.freeboard.io/fetch/${u}`
-  ];
 
-  for (const proxy of proxies) {
-    for (let i = 0; i < retries; i++) {
-      try {
-        const response = await fetch(proxy(url));
-        if (!response.ok) throw new Error(`Foutstatus: ${response.status}`);
-        return response; // <-- response object doorgeven
-      } catch (error) {
-        if (i < retries - 1) {
-          await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
-        } else {
-          console.warn(`Proxy mislukt (${proxy(url)}), poging ${i + 1}/${retries}`);
+
+  function fetchMetarTaf(icao, containerIdPrefix) {
+    // === METAR ===
+    fetchWithRetry(`https://aviationweather.gov/api/data/metar?ids=${icao}&format=json`)
+      .then(json => {
+        let text = "";
+        if (json && json.data && json.data.length > 0) {
+          text = json.data[0].raw_text || "";
         }
-      }
-    }
+        const gekleurd = kleurCodeerTekst(text);
+        document.getElementById(`${containerIdPrefix}-metar`).innerHTML =
+          (gekleurd ? gekleurd.replace(/\n/g, "<br>") : "") || "Geen METAR beschikbaar.";
+      })
+      .catch(err => {
+        console.error("Error fetching METAR:", err);
+        document.getElementById(`${containerIdPrefix}-metar`).textContent =
+          "Fout bij ophalen METAR.";
+      });
+
+    // === TAF ===
+    fetchWithRetry(`https://aviationweather.gov/api/data/taf?ids=${icao}&format=json`)
+      .then(json => {
+        let text = "";
+        if (json && json.data && json.data.length > 0) {
+          text = json.data[0].raw_text || "";
+        }
+        const gekleurd = kleurCodeerTekst(text);
+        document.getElementById(`${containerIdPrefix}-taf`).innerHTML =
+          (gekleurd ? gekleurd.replace(/\n/g, "<br>") : "") || "Geen TAF beschikbaar.";
+      })
+      .catch(err => {
+        console.error("Error fetching TAF:", err);
+        document.getElementById(`${containerIdPrefix}-taf`).textContent =
+          "Fout bij ophalen TAF.";
+      });
   }
 
-  throw new Error("Alle proxies en pogingen zijn mislukt.");
-}
+  function renderStation(title, icao, containerIdPrefix, container) {
+    const div = document.createElement("div");
+    div.className = "station";
+    div.innerHTML = `<h2>${title}</h2>
+      <p><strong>METAR:</strong></p>
+      <pre id="${containerIdPrefix}-metar">Laden...</pre>
+      <p><strong>TAF:</strong></p>
+      <pre id="${containerIdPrefix}-taf">Laden...</pre>`;
+    container.appendChild(div);
+    fetchMetarTaf(icao, containerIdPrefix);
+  }
 
-function fetchMetarTaf(icao, containerIdPrefix) {
-  // === METAR ===
-  fetchWithRetry(`https://aviationweather.gov/api/data/metar?ids=${icao}&format=json`)
-    .then(response => {
-      if (response.status === 204) return null;
-      return response.json();
-    })
-    .then(json => {
-      let text = "";
-      if (json && json.data && json.data.length > 0) {
-        text = json.data[0].raw_text || "";
-      }
-      const gekleurd = kleurCodeerTekst(text);
-      document.getElementById(`${containerIdPrefix}-metar`).innerHTML =
-        (gekleurd ? gekleurd.replace(/\n/g, "<br>") : "") || "Geen METAR beschikbaar.";
-    })
-    .catch(err => {
-      console.error("Error fetching METAR:", err);
-      document.getElementById(`${containerIdPrefix}-metar`).textContent =
-        "Fout bij ophalen METAR.";
-    });
+  function searchWeather() {
+    const input = document.getElementById("searchInput").value.trim();
+    const resultContainer = document.getElementById("searchResult");
+    resultContainer.innerHTML = "";
 
-  // === TAF ===
-  fetchWithRetry(`https://aviationweather.gov/api/data/taf?ids=${icao}&format=json`)
-    .then(response => {
-      if (response.status === 204) return null;
-      return response.json();
-    })
-    .then(json => {
-      let text = "";
-      if (json && json.data && json.data.length > 0) {
-        text = json.data[0].raw_text || "";
-      }
-      const gekleurd = kleurCodeerTekst(text);
-      document.getElementById(`${containerIdPrefix}-taf`).innerHTML =
-        (gekleurd ? gekleurd.replace(/\n/g, "<br>") : "") || "Geen TAF beschikbaar.";
-    })
-    .catch(err => {
-      console.error("Error fetching TAF:", err);
-      document.getElementById(`${containerIdPrefix}-taf`).textContent =
-        "Fout bij ophalen TAF.";
-    });
-}
-
-    function renderStation(title, icao, containerIdPrefix, container) {
-      const div = document.createElement("div");
-      div.className = "station";
-      div.innerHTML = `<h2>${title}</h2>
-        <p><strong>METAR:</strong></p>
-        <pre id="${containerIdPrefix}-metar">Laden...</pre>
-        <p><strong>TAF:</strong></p>
-        <pre id="${containerIdPrefix}-taf">Laden...</pre>`;
-      container.appendChild(div);
-      fetchMetarTaf(icao, containerIdPrefix);
+    if (!input) {
+      alert("Geef minstens één zoekterm in.");
+      return;
     }
 
-    function searchWeather() {
-      const input = document.getElementById("searchInput").value.trim();
-      const resultContainer = document.getElementById("searchResult");
-      resultContainer.innerHTML = "";
+    const terms = input.split(",").map(t => t.trim().toUpperCase());
 
-      if (!input) {
-        alert("Geef minstens één zoekterm in.");
-        return;
+    terms.forEach(term => {
+      if (!term) return;
+      let match = stations.find(s =>
+        s.icao === term || s.iata === term || s.name.toUpperCase() === term
+      );
+      if (!match && term.length === 4) {
+        match = { name: "Onbekend station", icao: term, iata: "?" };
       }
+      if (match) {
+        const idPrefix = `zoek-${match.icao}`;
+        renderStation(`${match.name} (${match.iata})`, match.icao, idPrefix, resultContainer);
+      } else {
+        const div = document.createElement("div");
+        div.className = "station";
+        div.innerHTML = `<h2>Station niet gevonden: ${term}</h2>`;
+        resultContainer.appendChild(div);
+      }
+    });
+  }
 
-      const terms = input.split(",").map(t => t.trim().toUpperCase());
-
-      terms.forEach(term => {
-        if (!term) return;
-
-        let match = stations.find(s =>
-          s.icao === term || s.iata === term || s.name.toUpperCase() === term
-        );
-
-        if (!match && term.length === 4) {
-          match = { name: "Onbekend station", icao: term, iata: "?" };
-        }
-
-        if (match) {
-          const idPrefix = `zoek-${match.icao}`;
-          renderStation(`${match.name} (${match.iata})`, match.icao, idPrefix, resultContainer);
-        } else {
-          const div = document.createElement("div");
-          div.className = "station";
-          div.innerHTML = `<h2>Station niet gevonden: ${term}</h2>`;
-          resultContainer.appendChild(div);
-        }
-      });
+  document.getElementById("searchInput").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      searchWeather();
     }
+  });
 
-    document.getElementById("searchInput").addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        searchWeather();
+  const selector = document.getElementById("stationsSelector");
+  const output = document.getElementById("stationsOutput");
+
+  stations.sort((a, b) => a.name.localeCompare(b.name)).forEach(station => {
+    const btn = document.createElement("button");
+    btn.textContent = `${station.name} (${station.iata})`;
+    btn.className = "station-button";
+    btn.addEventListener("click", () => {
+      const idPrefix = `${station.icao}-${station.iata}`;
+      if (!document.getElementById(`${idPrefix}-metar`)) {
+        renderStation(`${station.name} (${station.iata})`, station.icao, idPrefix, output);
       }
     });
+    selector.appendChild(btn);
+  });
 
-    const selector = document.getElementById("stationsSelector");
-    const output = document.getElementById("stationsOutput");
 
-    stations.sort((a, b) => a.name.localeCompare(b.name)).forEach(station => {
-      const btn = document.createElement("button");
-      btn.textContent = `${station.name} (${station.iata})`;
-      btn.className = "station-button";
-      btn.addEventListener("click", () => {
-        const idPrefix = `${station.icao}-${station.iata}`;
-        if (!document.getElementById(`${idPrefix}-metar`)) {
-          renderStation(`${station.name} (${station.iata})`, station.icao, idPrefix, output);
-        }
-      });
-      selector.appendChild(btn);
-    });
-
+       
    </script>
 </body>
 </html>
