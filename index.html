@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Weather</title>
+  <title>Weather Dashboard</title>
   <style>
     body {
       font-family: sans-serif;
@@ -67,32 +67,31 @@
       font-size: 0.9em;
       border: 1px solid #ddd;
     }
- .stations-selector {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
-  padding: 20px;
-  background-color: #eee;
-  border-bottom: 1px solid #ccc;
-}
-
-.station-button {
-  background-color: #FFD700;
-  border: 2px solid #D2042D;
-  color: #8B0000;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.2s ease-in-out;
-  text-align: center;
-  width: 100%;
-  box-sizing: border-box;
-}
+    .stations-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      padding: 20px;
+      background-color: #eee;
+      border-bottom: 1px solid #ccc;
+    }
+    .station-button {
+      background-color: #FFD700;
+      border: 2px solid #D2042D;
+      color: #8B0000;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s ease-in-out;
+      text-align: center;
+      width: 100%;
+      box-sizing: border-box;
+    }
     .station-button:hover {
       background-color: #ffe066;
     }
-    </style>
+  </style>
 </head>
 <body>
   <header>
@@ -110,228 +109,229 @@
 
   <script>
     const stations = [
-                { name: "Amsterdam", icao: "EHAM", iata: "AMS" },
-                { name: "Bahrein", icao: "OBBI", iata: "BAH" },
-				{ name: "Barcelona", icao: "LEBL", iata: "BCN" },
-				{ name: "Basel", icao: "LFSB", iata: "BSL" },
-				{ name: "Bologna", icao: "LIPE", iata: "BLQ" },
-				{ name: "Bordeaux", icao: "LFBD", iata: "BOD" },
-				{ name: "Brussel", icao: "EBBR", iata: "BRU" },
-				{ name: "Budapest", icao: "LHBP", iata: "BUD" },
-				{ name: "Casablanca", icao: "GMMN", iata: "CMN" },
-				{ name: "Cincinnati", icao: "KCVG", iata: "CVG" },
-				{ name: "Dublin", icao: "EIDW", iata: "DUB" },
-				{ name: "East-Midlands", icao: "EGNX", iata: "EMA" },
-				{ name: "Hongkong", icao: "VHHH", iata: "HKG" },
-				{ name: "Keulen", icao: "EDDK", iata: "CGN" },
-				{ name: "Kopenhagen", icao: "EKCH", iata: "CPH" },
-				{ name: "Lagos", icao: "DNMM", iata: "LOS" },
-				{ name: "Leipzig", icao: "EDDP", iata: "LEJ" },
-				{ name: "Linz", icao: "LOWL", iata: "LNZ" },
-				{ name: "Londen", icao: "EGGW", iata: "LTN" },
-				{ name: "London", icao: "EGLL", iata: "LHR" },
-				{ name: "Lyon", icao: "LFLL", iata: "LYS" },
-				{ name: "Madrid", icao: "LEMD", iata: "MAD" },
-				{ name: "Malpensa", icao: "LIMC", iata: "MXP" },
-				{ name: "Marseille", icao: "LFML", iata: "MRS" },
-				{ name: "Mulhouse", icao: "LFSB", iata: "MLH" },
-				{ name: "Parijs", icao: "LFPG", iata: "CDG" },
-				{ name: "Porto", icao: "LPPR", iata: "OPO" },
-				{ name: "Riyad", icao: "OERK", iata: "RUH" },
-				{ name: "Shanghai", icao: "ZSPD", iata: "PVG" },
-				{ name: "Shenzhen", icao: "ZGSZ", iata: "SZX" },
-				{ name: "Tel Aviv", icao: "LLBG", iata: "TLV" },
-				{ name: "Toulouse", icao: "LFBO", iata: "TLS" },
-				{ name: "Vitoria", icao: "LEVT", iata: "VIT" },    ];
-
-async function fetchWithRetry(url, retries = 3, delay = 1000) {
-    const proxies = [
-      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-      u => `https://thingproxy.freeboard.io/fetch/${u}`
+      { name: "Amsterdam", icao: "EHAM", iata: "AMS" },
+      { name: "Bahrein", icao: "OBBI", iata: "BAH" },
+      { name: "Barcelona", icao: "LEBL", iata: "BCN" },
+      { name: "Basel", icao: "LFSB", iata: "BSL" },
+      { name: "Bologna", icao: "LIPE", iata: "BLQ" },
+      { name: "Bordeaux", icao: "LFBD", iata: "BOD" },
+      { name: "Brussel", icao: "EBBR", iata: "BRU" },
+      { name: "Budapest", icao: "LHBP", iata: "BUD" },
+      { name: "Casablanca", icao: "GMMN", iata: "CMN" },
+      { name: "Cincinnati", icao: "KCVG", iata: "CVG" },
+      { name: "Dublin", icao: "EIDW", iata: "DUB" },
+      { name: "East-Midlands", icao: "EGNX", iata: "EMA" },
+      { name: "Hongkong", icao: "VHHH", iata: "HKG" },
+      { name: "Keulen", icao: "EDDK", iata: "CGN" },
+      { name: "Kopenhagen", icao: "EKCH", iata: "CPH" },
+      { name: "Lagos", icao: "DNMM", iata: "LOS" },
+      { name: "Leipzig", icao: "EDDP", iata: "LEJ" },
+      { name: "Linz", icao: "LOWL", iata: "LNZ" },
+      { name: "Londen", icao: "EGGW", iata: "LTN" },
+      { name: "London", icao: "EGLL", iata: "LHR" },
+      { name: "Lyon", icao: "LFLL", iata: "LYS" },
+      { name: "Madrid", icao: "LEMD", iata: "MAD" },
+      { name: "Malpensa", icao: "LIMC", iata: "MXP" },
+      { name: "Marseille", icao: "LFML", iata: "MRS" },
+      { name: "Mulhouse", icao: "LFSB", iata: "MLH" },
+      { name: "Parijs", icao: "LFPG", iata: "CDG" },
+      { name: "Porto", icao: "LPPR", iata: "OPO" },
+      { name: "Riyad", icao: "OERK", iata: "RUH" },
+      { name: "Shanghai", icao: "ZSPD", iata: "PVG" },
+      { name: "Shenzhen", icao: "ZGSZ", iata: "SZX" },
+      { name: "Tel Aviv", icao: "LLBG", iata: "TLV" },
+      { name: "Toulouse", icao: "LFBO", iata: "TLS" },
+      { name: "Vitoria", icao: "LEVT", iata: "VIT" },
     ];
 
-    for (const proxy of proxies) {
-      for (let i = 0; i < retries; i++) {
-        try {
-          const response = await fetch(proxy(url));
-          if (!response.ok) throw new Error(`Foutstatus: ${response.status}`);
-          return await response.json(); // meteen JSON teruggeven
-        } catch (error) {
-          if (i < retries - 1) {
-            await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
-          } else {
-            console.warn(`Proxy mislukt (${proxy(url)}), poging ${i + 1}/${retries}`);
+    async function fetchWithRetry(url, retries = 3, delay = 1000) {
+      const proxies = [
+        u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+        u => `https://thingproxy.freeboard.io/fetch/${u}`
+      ];
+
+      for (const proxy of proxies) {
+        for (let i = 0; i < retries; i++) {
+          try {
+            const response = await fetch(proxy(url));
+            if (!response.ok) throw new Error(`Foutstatus: ${response.status}`);
+            return await response.json();
+          } catch (error) {
+            if (i < retries - 1) {
+              await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+            } else {
+              console.warn(`Proxy mislukt (${proxy(url)}), poging ${i + 1}/${retries}`);
+            }
           }
         }
       }
-    }
-    throw new Error("Alle proxies en pogingen zijn mislukt.");
-  }
-
-  function kleurCodeerTekst(tekst) {
-  if (!tekst) return tekst;
-
-  const fenomenen = [
-    'TSRA','TS', 'thunderstorm', 'SN', 'snow', 'FG', 'fog', 'GR', 'hail', 'GS', 'small hail',
-    'snow pellets', 'BR', 'mist', 'HZ', 'haze', 'FU', 'smoke', 'DS', 'duststorm', 'SS', 'sandstorm', 'severe wind', 'FZ', 'freezing', 'VA', 'volcanic ash', 'DU', 'widespread dust',
-    'SQ', 'squall', 'FC', 'funnel cloud', 'PO', 'dust devils', 'ice crystals',
-    'PL', 'ice pellets', 'SG', 'snow grains', 'SA', 'sand', 'CB', 'cumulonimbus',
-    'TCU', 'towering cumulus', 'WS', 'wind shear'
-  ];
-
-  return tekst.split('\n').map(lijn => {
-    // Kijk of de lijn een van de gevaarlijke weerfenomenen bevat
-    if (/Weather:/i.test(lijn)) {
-      const inhoud = lijn.split('Weather:')[1].trim().toLowerCase();
-      const gevaarlijk = fenomenen.some(f => inhoud.includes(f.toLowerCase()));
-      if (gevaarlijk) {
-        return `<span style="color: red;">${lijn}</span>`;
-      }
+      throw new Error("Alle proxies en pogingen zijn mislukt.");
     }
 
-    lijn = lijn.replace(/(Visibility:.*?\((\d+(?:\.\d+)?)\s+km\))/g, (match, fullMatch, km) => {
-      const afstand = parseFloat(km);
-      if (afstand <= 0.56) return `<span style="color: red;">${fullMatch}</span>`;
-      if (afstand <= 0.81) return `<span style="color: orange;">${fullMatch}</span>`;
-      return fullMatch;
-    });
+    function kleurCodeerTekst(tekst) {
+      if (!tekst) return tekst;
 
-    lijn = lijn.replace(/(Ceiling:\s+(\d+)\s+feet\s+AGL)/g, (match, fullMatch, hoogte) => {
-      const feet = parseInt(hoogte, 10);
-      if (feet <= 200) return `<span style="color: red;">${fullMatch}</span>`;
-      if (feet <= 399) return `<span style="color: orange;">${fullMatch}</span>`;
-      return fullMatch;
-    });
+      const fenomenen = [
+        'TSRA', 'TS', 'thunderstorm', 'SN', 'snow', 'FG', 'fog', 'GR', 'hail', 'GS', 'small hail',
+        'snow pellets', 'BR', 'mist', 'HZ', 'haze', 'FU', 'smoke', 'DS', 'duststorm', 'SS', 'sandstorm',
+        'severe wind', 'FZ', 'freezing', 'VA', 'volcanic ash', 'DU', 'widespread dust',
+        'SQ', 'squall', 'FC', 'funnel cloud', 'PO', 'dust devils', 'ice crystals',
+        'PL', 'ice pellets', 'SG', 'snow grains', 'SA', 'sand', 'CB', 'cumulonimbus',
+        'TCU', 'towering cumulus', 'WS', 'wind shear'
+      ];
 
- lijn = lijn.replace(
-  /(Winds:\s*from\s*(\d+)\s*degrees\s*at\s*(\d+)\s*knots)(?:\s*,?\s*gusting\s*to\s*(\d+)\s*knots)?/gi,
-  (match, fullMatch, richting, snelheid, gusts) => {
-    const wind = parseInt(snelheid, 10);
-    const gust = gusts ? parseInt(gusts, 10) : null;
+      const regels = tekst.split('\n').map(regel => {
+        let result = regel;
 
-    // Prioriteit aan kleurcodering op basis van gusts
-    if (gust !== null) {
-      if (gust >= 36) return `<span style="color: red;">${match}</span>`;
-      if (gust >= 25) return `<span style="color: orange;">${match}</span>`;
+        // Controleer op gevaarlijke weerfenomenen
+        fenomenen.forEach(fenomeen => {
+          const regex = new RegExp(`\\b${fenomeen}\\b`, 'gi');
+          if (regex.test(result)) {
+            result = `<span style="color: red;">${result}</span>`;
+          }
+        });
+
+        // Kleurcodering voor zichtbaarheid
+        result = result.replace(/(Visibility:.*?\((\d+(?:\.\d+)?)\s+km\))/g, (match, fullMatch, km) => {
+          const afstand = parseFloat(km);
+          if (afstand <= 0.56) return `<span style="color: red;">${fullMatch}</span>`;
+          if (afstand <= 0.81) return `<span style="color: orange;">${fullMatch}</span>`;
+          return fullMatch;
+        });
+
+        // Kleurcodering voor plafond
+        result = result.replace(/(Ceiling:\s+(\d+)\s+feet\s+AGL)/g, (match, fullMatch, hoogte) => {
+          const feet = parseInt(hoogte, 10);
+          if (feet <= 200) return `<span style="color: red;">${fullMatch}</span>`;
+          if (feet <= 399) return `<span style="color: orange;">${fullMatch}</span>`;
+          return fullMatch;
+        });
+
+        // Kleurcodering voor wind
+        result = result.replace(
+          /(Winds:\s*from\s*(\d+)\s*degrees\s*at\s*(\d+)\s*knots)(?:\s*,?\s*gusting\s*to\s*(\d+)\s*knots)?/gi,
+          (match, fullMatch, richting, snelheid, gusts) => {
+            const wind = parseInt(snelheid, 10);
+            const gust = gusts ? parseInt(gusts, 10) : null;
+
+            if (gust !== null) {
+              if (gust >= 36) return `<span style="color: red;">${match}</span>`;
+              if (gust >= 25) return `<span style="color: orange;">${match}</span>`;
+            }
+
+            if (wind >= 26) return `<span style="color: red;">${match}</span>`;
+            if (wind >= 21) return `<span style="color: orange;">${match}</span>`;
+
+            return match;
+          }
+        );
+
+        return result;
+      });
+
+      return regels.join('\n');
     }
 
-    if (wind >= 26) return `<span style="color: red;">${match}</span>`;
-    if (wind >= 21) return `<span style="color: orange;">${match}</span>`;
+    async function fetchMetarTaf(icao, containerIdPrefix) {
+      const metarElement = document.getElementById(`${containerIdPrefix}-metar`);
+      const tafElement = document.getElementById(`${containerIdPrefix}-taf`);
 
-    return match;
-  }
-);
-    return lijn;
-  }).join('\n');
-}
-
-
-
-  function fetchMetarTaf(icao, containerIdPrefix) {
-    // === METAR ===
-    fetchWithRetry(`https://aviationweather.gov/api/data/metar?ids=${icao}&format=json`)
-      .then(json => {
-        let text = "";
-        if (json && json.data && json.data.length > 0) {
-          text = json.data[0].raw_text || "";
-        }
-        const gekleurd = kleurCodeerTekst(text);
-        document.getElementById(`${containerIdPrefix}-metar`).innerHTML =
-          (gekleurd ? gekleurd.replace(/\n/g, "<br>") : "") || "Geen METAR beschikbaar.";
-      })
-      .catch(err => {
+      // METAR ophalen
+      try {
+        const metarData = await fetchWithRetry(`https://aviationweather.gov/api/data/metar?ids=${icao}&format=json`);
+        const metarText = metarData && metarData[0]?.raw_text || "Geen METAR beschikbaar.";
+        const gekleurdMetar = kleurCodeerTekst(metarText);
+        metarElement.innerHTML = gekleurdMetar ? gekleurdMetar.replace(/\n/g, "<br>") : "Geen METAR beschikbaar.";
+      } catch (err) {
         console.error("Error fetching METAR:", err);
-        document.getElementById(`${containerIdPrefix}-metar`).textContent =
-          "Fout bij ophalen METAR.";
-      });
+        metarElement.textContent = "Fout bij ophalen METAR.";
+      }
 
-    // === TAF ===
-    fetchWithRetry(`https://aviationweather.gov/api/data/taf?ids=${icao}&format=json`)
-      .then(json => {
-        let text = "";
-        if (json && json.data && json.data.length > 0) {
-          text = json.data[0].raw_text || "";
-        }
-        const gekleurd = kleurCodeerTekst(text);
-        document.getElementById(`${containerIdPrefix}-taf`).innerHTML =
-          (gekleurd ? gekleurd.replace(/\n/g, "<br>") : "") || "Geen TAF beschikbaar.";
-      })
-      .catch(err => {
+      // TAF ophalen
+      try {
+        const tafData = await fetchWithRetry(`https://aviationweather.gov/api/data/taf?ids=${icao}&format=json`);
+        const tafText = tafData && tafData[0]?.raw_text || "Geen TAF beschikbaar.";
+        const gekleurdTaf = kleurCodeerTekst(tafText);
+        tafElement.innerHTML = gekleurdTaf ? gekleurdTaf.replace(/\n/g, "<br>") : "Geen TAF beschikbaar.";
+      } catch (err) {
         console.error("Error fetching TAF:", err);
-        document.getElementById(`${containerIdPrefix}-taf`).textContent =
-          "Fout bij ophalen TAF.";
+        tafElement.textContent = "Fout bij ophalen TAF.";
+      }
+    }
+
+    function renderStation(title, icao, containerIdPrefix, container) {
+      const div = document.createElement("div");
+      div.className = "station";
+      div.innerHTML = `
+        <h2>${title}</h2>
+        <p><strong>METAR:</strong></p>
+        <pre id="${containerIdPrefix}-metar">Laden...</pre>
+        <p><strong>TAF:</strong></p>
+        <pre id="${containerIdPrefix}-taf">Laden...</pre>
+      `;
+      container.appendChild(div);
+      fetchMetarTaf(icao, containerIdPrefix);
+    }
+
+    function searchWeather() {
+      const input = document.getElementById("searchInput").value.trim();
+      const resultContainer = document.getElementById("searchResult");
+      resultContainer.innerHTML = "";
+
+      if (!input) {
+        alert("Geef minstens één zoekterm in.");
+        return;
+      }
+
+      const terms = input.split(",").map(t => t.trim().toUpperCase());
+
+      terms.forEach(term => {
+        if (!term) return;
+        let match = stations.find(s =>
+          s.icao === term || s.iata === term || s.name.toUpperCase() === term
+        );
+        if (!match && term.length === 4) {
+          match = { name: "Onbekend station", icao: term, iata: "?" };
+        }
+        if (match) {
+          const idPrefix = `zoek-${match.icao}`;
+          renderStation(`${match.name} (${match.iata})`, match.icao, idPrefix, resultContainer);
+        } else {
+          const div = document.createElement("div");
+          div.className = "station";
+          div.innerHTML = `<h2>Station niet gevonden: ${term}</h2>`;
+          resultContainer.appendChild(div);
+        }
       });
-  }
-
-  function renderStation(title, icao, containerIdPrefix, container) {
-    const div = document.createElement("div");
-    div.className = "station";
-    div.innerHTML = `<h2>${title}</h2>
-      <p><strong>METAR:</strong></p>
-      <pre id="${containerIdPrefix}-metar">Laden...</pre>
-      <p><strong>TAF:</strong></p>
-      <pre id="${containerIdPrefix}-taf">Laden...</pre>`;
-    container.appendChild(div);
-    fetchMetarTaf(icao, containerIdPrefix);
-  }
-
-  function searchWeather() {
-    const input = document.getElementById("searchInput").value.trim();
-    const resultContainer = document.getElementById("searchResult");
-    resultContainer.innerHTML = "";
-
-    if (!input) {
-      alert("Geef minstens één zoekterm in.");
-      return;
     }
 
-    const terms = input.split(",").map(t => t.trim().toUpperCase());
+    function initializeStationButtons() {
+      const selector = document.getElementById("stationsSelector");
+      const output = document.getElementById("stationsOutput");
 
-    terms.forEach(term => {
-      if (!term) return;
-      let match = stations.find(s =>
-        s.icao === term || s.iata === term || s.name.toUpperCase() === term
-      );
-      if (!match && term.length === 4) {
-        match = { name: "Onbekend station", icao: term, iata: "?" };
-      }
-      if (match) {
-        const idPrefix = `zoek-${match.icao}`;
-        renderStation(`${match.name} (${match.iata})`, match.icao, idPrefix, resultContainer);
-      } else {
-        const div = document.createElement("div");
-        div.className = "station";
-        div.innerHTML = `<h2>Station niet gevonden: ${term}</h2>`;
-        resultContainer.appendChild(div);
-      }
-    });
-  }
-
-  document.getElementById("searchInput").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      searchWeather();
+      stations.sort((a, b) => a.name.localeCompare(b.name)).forEach(station => {
+        const btn = document.createElement("button");
+        btn.textContent = `${station.name} (${station.iata})`;
+        btn.className = "station-button";
+        btn.addEventListener("click", () => {
+          const idPrefix = `${station.icao}-${station.iata}`;
+          if (!document.getElementById(`${idPrefix}-metar`)) {
+            renderStation(`${station.name} (${station.iata})`, station.icao, idPrefix, output);
+          }
+        });
+        selector.appendChild(btn);
+      });
     }
-  });
 
-  const selector = document.getElementById("stationsSelector");
-  const output = document.getElementById("stationsOutput");
-
-  stations.sort((a, b) => a.name.localeCompare(b.name)).forEach(station => {
-    const btn = document.createElement("button");
-    btn.textContent = `${station.name} (${station.iata})`;
-    btn.className = "station-button";
-    btn.addEventListener("click", () => {
-      const idPrefix = `${station.icao}-${station.iata}`;
-      if (!document.getElementById(`${idPrefix}-metar`)) {
-        renderStation(`${station.name} (${station.iata})`, station.icao, idPrefix, output);
+    document.getElementById("searchInput").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        searchWeather();
       }
     });
-    selector.appendChild(btn);
-  });
 
-
-       
-   </script>
+    // Initializeer de stationsknoppen bij het laden van de pagina
+    initializeStationButtons();
+  </script>
 </body>
 </html>
