@@ -227,22 +227,49 @@
 }
 
     function fetchMetarTaf(icao, containerIdPrefix) {
-  fetchWithRetry(`https://aviationweather.gov/cgi-bin/data/metar.php?ids=${icao}&format=decoded`)
-    .then(data => {
-      const gekleurd = kleurCodeerTekst(data);
-      document.getElementById(`${containerIdPrefix}-metar`).innerHTML = gekleurd.replace(/\n/g, "<br>") || "Geen METAR beschikbaar.";
+  // METAR
+  fetchWithRetry(`https://aviationweather.gov/api/data/metar?ids=${icao}&format=decoded`)
+    .then(response => {
+      if (response.status === 204) {
+        // No METAR data
+        return "";
+      }
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.text();
     })
-    .catch(() => {
-      document.getElementById(`${containerIdPrefix}-metar`).textContent = "Fout bij ophalen METAR.";
+    .then(text => {
+      const gekleurd = kleurCodeerTekst(text);
+      document.getElementById(`${containerIdPrefix}-metar`).innerHTML =
+        (gekleurd ? gekleurd.replace(/\n/g, "<br>") : "") || "Geen METAR beschikbaar.";
+    })
+    .catch(err => {
+      console.error("Error fetching METAR:", err);
+      document.getElementById(`${containerIdPrefix}-metar`).textContent =
+        "Fout bij ophalen METAR.";
     });
 
-  fetchWithRetry(`https://aviationweather.gov/cgi-bin/data/taf.php?ids=${icao}&format=decoded`)
-    .then(data => {
-      const gekleurd = kleurCodeerTekst(data);
-      document.getElementById(`${containerIdPrefix}-taf`).innerHTML = gekleurd.replace(/\n/g, "<br>") || "Geen TAF beschikbaar.";
+  // TAF
+  fetchWithRetry(`https://aviationweather.gov/api/data/taf?ids=${icao}&format=decoded`)
+    .then(response => {
+      if (response.status === 204) {
+        return "";
+      }
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.text();
     })
-    .catch(() => {
-      document.getElementById(`${containerIdPrefix}-taf`).textContent = "Fout bij ophalen TAF.";
+    .then(text => {
+      const gekleurd = kleurCodeerTekst(text);
+      document.getElementById(`${containerIdPrefix}-taf`).innerHTML =
+        (gekleurd ? gekleurd.replace(/\n/g, "<br>") : "") || "Geen TAF beschikbaar.";
+    })
+    .catch(err => {
+      console.error("Error fetching TAF:", err);
+      document.getElementById(`${containerIdPrefix}-taf`).textContent =
+        "Fout bij ophalen TAF.";
     });
 }
 
