@@ -1,337 +1,282 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Weather Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Airport Weather</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f9f9f9;
+      background-color: #FFC107; /* DHL Yellow */
+      color: #D40511; /* DHL Red for headings and buttons */
     }
-    header {
-      background-color: #FFD700;
-      padding: 20px;
-      text-align: center;
-      border-bottom: 5px solid #D2042D;
-    }
-    header h1 {
-      margin: 0;
-      color: #8B0000;
-    }
-    .search-container {
-      padding: 20px;
+    button {
+      background-color: #D40511;
+      color: #FFC107;
+      width: 100%;
       text-align: center;
     }
-    input[type="text"] {
-      padding: 10px;
-      width: 80%;
-      max-width: 500px;
-      font-size: 16px;
-      border: 2px solid #ccc;
-      border-radius: 5px;
+    button:hover {
+      background-color: #b0040e;
     }
-    input[type="text"]:disabled {
-      background-color: #eee;
-      cursor: not-allowed;
+    #weather-data {
+      background-color: rgba(255, 255, 255, 0.9);
+      color: #000000; /* Black text for decoded METAR and TAF */
     }
-    .search-results, .stations {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
+    .highlight-red {
+      background-color: #D40511;
+      color: #FFFFFF;
+      padding: 2px 4px;
+      border-radius: 2px;
     }
-    .station {
-      background: white;
-      border: 2px solid #D2042D;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    .highlight-orange {
+      background-color: #F28C38;
+      color: #FFFFFF;
+      padding: 2px 4px;
+      border-radius: 2px;
     }
-    .station h2 {
-      margin-top: 0;
-      color: #D2042D;
-      font-size: 1.2em;
-    }
-    .station pre {
-      background: #f0f0f0;
-      padding: 10px;
-      border-radius: 5px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      font-family: monospace;
-      font-size: 0.9em;
-      border: 1px solid #ddd;
-    }
-    .stations-selector {
+    .grid-container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px;
-      padding: 20px;
-      background-color: #eee;
-      border-bottom: 1px solid #ccc;
-    }
-    .station-button {
-      background-color: #FFD700;
-      border: 2px solid #D2042D;
-      color: #8B0000;
-      padding: 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background-color 0.2s ease-in-out;
-      text-align: center;
+      gap: 0.5rem; /* Consistent spacing between buttons */
+      padding: 1rem; /* Consistent padding around the grid */
+      max-width: 1200px; /* Max width for larger screens */
       width: 100%;
       box-sizing: border-box;
     }
-    .station-button:hover {
-      background-color: #ffe066;
+    @media (max-width: 640px) {
+      .grid-container {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.5rem;
+        padding: 0.5rem;
+      }
     }
   </style>
 </head>
-<body>
-  <header>
-    <h1>Weather Dashboard</h1>
-  </header>
-
-  <section class="stations-selector" id="stationsSelector"></section>
-  <section class="stations" id="stationsOutput"></section>
-
-  <section class="search-container">
-    <input type="text" id="searchInput" placeholder="Zoek op IATA, ICAO of naam (bv. BRU, EDDP, Lagos)" />
-  </section>
-
-  <section id="searchResult" class="search-results"></section>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+  <h1 class="text-3xl font-bold mb-6">Airport Weather Information</h1>
+  <div class="grid-container">
+    <button onclick="fetchWeather('EHAM', 'Amsterdam (AMS)')" class="px-4 py-2 rounded-lg font-semibold">Amsterdam (AMS)</button>
+    <button onclick="fetchWeather('OBBI', 'Bahrain (BAH)')" class="px-4 py-2 rounded-lg font-semibold">Bahrain (BAH)</button>
+    <button onclick="fetchWeather('LEBL', 'Barcelona (BCN)')" class="px-4 py-2 rounded-lg font-semibold">Barcelona (BCN)</button>
+    <button onclick="fetchWeather('LFSB', 'Basel/Mulhouse (BSL/MLH)')" class="px-4 py-2 rounded-lg font-semibold">Basel/Mulhouse (BSL/MLH)</button>
+    <button onclick="fetchWeather('LIPE', 'Bologna (BLQ)')" class="px-4 py-2 rounded-lg font-semibold">Bologna (BLQ)</button>
+    <button onclick="fetchWeather('LFBD', 'Bordeaux (BOD)')" class="px-4 py-2 rounded-lg font-semibold">Bordeaux (BOD)</button>
+    <button onclick="fetchWeather('EBBR', 'Brussels (BRU)')" class="px-4 py-2 rounded-lg font-semibold">Brussels (BRU)</button>
+    <button onclick="fetchWeather('LHBP', 'Budapest (BUD)')" class="px-4 py-2 rounded-lg font-semibold">Budapest (BUD)</button>
+    <button onclick="fetchWeather('GMMN', 'Casablanca (CMN)')" class="px-4 py-2 rounded-lg font-semibold">Casablanca (CMN)</button>
+    <button onclick="fetchWeather('KCVG', 'Cincinnati (CVG)')" class="px-4 py-2 rounded-lg font-semibold">Cincinnati (CVG)</button>
+    <button onclick="fetchWeather('EIDW', 'Dublin (DUB)')" class="px-4 py-2 rounded-lg font-semibold">Dublin (DUB)</button>
+    <button onclick="fetchWeather('EGNX', 'East Midlands (EMA)')" class="px-4 py-2 rounded-lg font-semibold">East Midlands (EMA)</button>
+    <button onclick="fetchWeather('VHHH', 'Hong Kong (HKG)')" class="px-4 py-2 rounded-lg font-semibold">Hong Kong (HKG)</button>
+    <button onclick="fetchWeather('EDDK', 'Cologne (CGN)')" class="px-4 py-2 rounded-lg font-semibold">Cologne (CGN)</button>
+    <button onclick="fetchWeather('EKCH', 'Copenhagen (CPH)')" class="px-4 py-2 rounded-lg font-semibold">Copenhagen (CPH)</button>
+    <button onclick="fetchWeather('DNMM', 'Lagos (LOS)')" class="px-4 py-2 rounded-lg font-semibold">Lagos (LOS)</button>
+    <button onclick="fetchWeather('EDDP', 'Leipzig (LEJ)')" class="px-4 py-2 rounded-lg font-semibold">Leipzig (LEJ)</button>
+    <button onclick="fetchWeather('LOWL', 'Linz (LNZ)')" class="px-4 py-2 rounded-lg font-semibold">Linz (LNZ)</button>
+    <button onclick="fetchWeather('EGGW', 'Luton (LTN)')" class="px-4 py-2 rounded-lg font-semibold">Luton (LTN)</button>
+    <button onclick="fetchWeather('EGLL', 'London Heathrow (LHR)')" class="px-4 py-2 rounded-lg font-semibold">London Heathrow (LHR)</button>
+    <button onclick="fetchWeather('LFLL', 'Lyon (LYS)')" class="px-4 py-2 rounded-lg font-semibold">Lyon (LYS)</button>
+    <button onclick="fetchWeather('LEMD', 'Madrid (MAD)')" class="px-4 py-2 rounded-lg font-semibold">Madrid (MAD)</button>
+    <button onclick="fetchWeather('LIMC', 'Milan Malpensa (MXP)')" class="px-4 py-2 rounded-lg font-semibold">Milan Malpensa (MXP)</button>
+    <button onclick="fetchWeather('LFML', 'Marseille (MRS)')" class="px-4 py-2 rounded-lg font-semibold">Marseille (MRS)</button>
+    <button onclick="fetchWeather('LFPG', 'Paris CDG (CDG)')" class="px-4 py-2 rounded-lg font-semibold">Paris CDG (CDG)</button>
+    <button onclick="fetchWeather('LPPR', 'Porto (OPO)')" class="px-4 py-2 rounded-lg font-semibold">Porto (OPO)</button>
+    <button onclick="fetchWeather('OERK', 'Riyadh (RUH)')" class="px-4 py-2 rounded-lg font-semibold">Riyadh (RUH)</button>
+    <button onclick="fetchWeather('ZSPD', 'Shanghai (PVG)')" class="px-4 py-2 rounded-lg font-semibold">Shanghai (PVG)</button>
+    <button onclick="fetchWeather('ZGSZ', 'Shenzhen (SZX)')" class="px-4 py-2 rounded-lg font-semibold">Shenzhen (SZX)</button>
+    <button onclick="fetchWeather('LLBG', 'Tel Aviv (TLV)')" class="px-4 py-2 rounded-lg font-semibold">Tel Aviv (TLV)</button>
+    <button onclick="fetchWeather('LFBO', 'Toulouse (TLS)')" class="px-4 py-2 rounded-lg font-semibold">Toulouse (TLS)</button>
+    <button onclick="fetchWeather('LEVT', 'Vitoria (VIT)')" class="px-4 py-2 rounded-lg font-semibold">Vitoria (VIT)</button>
+  </div>
+  <div id="weather-data" class="w-full max-w-2xl p-6 rounded-lg shadow-lg mt-6">
+    <p>Select an airport to view decoded METAR and TAF data.</p>
+  </div>
 
   <script>
-    const stations = [
-      { name: "Amsterdam", icao: "EHAM", iata: "AMS" },
-      { name: "Bahrein", icao: "OBBI", iata: "BAH" },
-      { name: "Barcelona", icao: "LEBL", iata: "BCN" },
-      { name: "Basel", icao: "LFSB", iata: "BSL" },
-      { name: "Bologna", icao: "LIPE", iata: "BLQ" },
-      { name: "Bordeaux", icao: "LFBD", iata: "BOD" },
-      { name: "Brussel", icao: "EBBR", iata: "BRU" },
-      { name: "Budapest", icao: "LHBP", iata: "BUD" },
-      { name: "Casablanca", icao: "GMMN", iata: "CMN" },
-      { name: "Cincinnati", icao: "KCVG", iata: "CVG" },
-      { name: "Dublin", icao: "EIDW", iata: "DUB" },
-      { name: "East-Midlands", icao: "EGNX", iata: "EMA" },
-      { name: "Hongkong", icao: "VHHH", iata: "HKG" },
-      { name: "Keulen", icao: "EDDK", iata: "CGN" },
-      { name: "Kopenhagen", icao: "EKCH", iata: "CPH" },
-      { name: "Lagos", icao: "DNMM", iata: "LOS" },
-      { name: "Leipzig", icao: "EDDP", iata: "LEJ" },
-      { name: "Linz", icao: "LOWL", iata: "LNZ" },
-      { name: "Londen", icao: "EGGW", iata: "LTN" },
-      { name: "London", icao: "EGLL", iata: "LHR" },
-      { name: "Lyon", icao: "LFLL", iata: "LYS" },
-      { name: "Madrid", icao: "LEMD", iata: "MAD" },
-      { name: "Malpensa", icao: "LIMC", iata: "MXP" },
-      { name: "Marseille", icao: "LFML", iata: "MRS" },
-      { name: "Mulhouse", icao: "LFSB", iata: "MLH" },
-      { name: "Parijs", icao: "LFPG", iata: "CDG" },
-      { name: "Porto", icao: "LPPR", iata: "OPO" },
-      { name: "Riyad", icao: "OERK", iata: "RUH" },
-      { name: "Shanghai", icao: "ZSPD", iata: "PVG" },
-      { name: "Shenzhen", icao: "ZGSZ", iata: "SZX" },
-      { name: "Tel Aviv", icao: "LLBG", iata: "TLV" },
-      { name: "Toulouse", icao: "LFBO", iata: "TLS" },
-      { name: "Vitoria", icao: "LEVT", iata: "VIT" },
-    ];
+    const severeWeather = ['TSRA', 'TS', 'thunderstorm', 'SN', 'snow', 'FG', 'fog', 'GR', 'hail', 'GS', 'small hail', 'snow pellets', 'BR', 'mist', 'HZ', 'haze', 'FU', 'smoke', 'DS', 'duststorm', 'SS', 'sandstorm', 'severe wind', 'FZ', 'freezing', 'VA', 'volcanic ash', 'DU', 'widespread dust', 'SQ', 'squall', 'FC', 'funnel cloud', 'PO', 'dust devils', 'ice crystals', 'PL', 'ice pellets', 'SG', 'snow grains', 'SA', 'sand', 'CB', 'cumulonimbus', 'TCU', 'towering cumulus', 'WS', 'wind shear'];
 
-    async function fetchWithRetry(url, retries = 3, delay = 1000) {
-      const proxies = [
-        u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-        u => `https://thingproxy.freeboard.io/fetch/${u}`
-      ];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-      for (const proxy of proxies) {
-        for (let i = 0; i < retries; i++) {
-          try {
-            const response = await fetch(proxy(url));
-            if (!response.ok) throw new Error(`Foutstatus: ${response.status}`);
-            return await response.json();
-          } catch (error) {
-            if (i < retries - 1) {
-              await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
-            } else {
-              console.warn(`Proxy mislukt (${proxy(url)}), poging ${i + 1}/${retries}`);
-            }
-          }
-        }
-      }
-      throw new Error("Alle proxies en pogingen zijn mislukt.");
-    }
-
-    function kleurCodeerTekst(tekst) {
-      if (!tekst) return tekst;
-
-      const fenomenen = [
-        'TSRA', 'TS', 'thunderstorm', 'SN', 'snow', 'FG', 'fog', 'GR', 'hail', 'GS', 'small hail',
-        'snow pellets', 'BR', 'mist', 'HZ', 'haze', 'FU', 'smoke', 'DS', 'duststorm', 'SS', 'sandstorm',
-        'severe wind', 'FZ', 'freezing', 'VA', 'volcanic ash', 'DU', 'widespread dust',
-        'SQ', 'squall', 'FC', 'funnel cloud', 'PO', 'dust devils', 'ice crystals',
-        'PL', 'ice pellets', 'SG', 'snow grains', 'SA', 'sand', 'CB', 'cumulonimbus',
-        'TCU', 'towering cumulus', 'WS', 'wind shear'
-      ];
-
-      const regels = tekst.split('\n').map(regel => {
-        let result = regel;
-
-        // Controleer op gevaarlijke weerfenomenen
-        fenomenen.forEach(fenomeen => {
-          const regex = new RegExp(`\\b${fenomeen}\\b`, 'gi');
-          if (regex.test(result)) {
-            result = `<span style="color: red;">${result}</span>`;
-          }
-        });
-
-        // Kleurcodering voor zichtbaarheid
-        result = result.replace(/(Visibility:.*?\((\d+(?:\.\d+)?)\s+km\))/g, (match, fullMatch, km) => {
-          const afstand = parseFloat(km);
-          if (afstand <= 0.56) return `<span style="color: red;">${fullMatch}</span>`;
-          if (afstand <= 0.81) return `<span style="color: orange;">${fullMatch}</span>`;
-          return fullMatch;
-        });
-
-        // Kleurcodering voor plafond
-        result = result.replace(/(Ceiling:\s+(\d+)\s+feet\s+AGL)/g, (match, fullMatch, hoogte) => {
-          const feet = parseInt(hoogte, 10);
-          if (feet <= 200) return `<span style="color: red;">${fullMatch}</span>`;
-          if (feet <= 399) return `<span style="color: orange;">${fullMatch}</span>`;
-          return fullMatch;
-        });
-
-        // Kleurcodering voor wind
-        result = result.replace(
-          /(Winds:\s*from\s*(\d+)\s*degrees\s*at\s*(\d+)\s*knots)(?:\s*,?\s*gusting\s*to\s*(\d+)\s*knots)?/gi,
-          (match, fullMatch, richting, snelheid, gusts) => {
-            const wind = parseInt(snelheid, 10);
-            const gust = gusts ? parseInt(gusts, 10) : null;
-
-            if (gust !== null) {
-              if (gust >= 36) return `<span style="color: red;">${match}</span>`;
-              if (gust >= 25) return `<span style="color: orange;">${match}</span>`;
-            }
-
-            if (wind >= 26) return `<span style="color: red;">${match}</span>`;
-            if (wind >= 21) return `<span style="color: orange;">${match}</span>`;
-
-            return match;
-          }
-        );
-
-        return result;
+    function highlightText(text, conditions, className) {
+      let highlighted = text;
+      conditions.forEach(condition => {
+        const regex = new RegExp(`\\b${condition}\\b`, 'gi');
+        highlighted = highlighted.replace(regex, `<span class="${className}">${condition}</span>`);
       });
-
-      return regels.join('\n');
+      return highlighted;
     }
 
-    async function fetchMetarTaf(icao, containerIdPrefix) {
-      const metarElement = document.getElementById(`${containerIdPrefix}-metar`);
-      const tafElement = document.getElementById(`${containerIdPrefix}-taf`);
+    function parseCloudHeight(cloud) {
+      if (!cloud) return null;
+      const heightMatch = cloud.match(/(\d+)/);
+      return heightMatch ? parseInt(heightMatch[1]) : null;
+    }
 
-      // METAR ophalen
+    function formatTime(isoTime) {
+      if (!isoTime) return 'Unknown';
+      const date = new Date(isoTime);
+      const day = date.getUTCDate().toString().padStart(2, '0');
+      const month = months[date.getUTCMonth()];
+      const year = date.getUTCFullYear();
+      const hours = date.getUTCHours().toString().padStart(2, '0');
+      const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+      return `${day} ${month} ${year} ${hours}:${minutes} UTC`;
+    }
+
+    async function fetchWeather(icao, airportName) {
+      const weatherDiv = document.getElementById('weather-data');
+      weatherDiv.innerHTML = '<p>Loading...</p>';
+
       try {
-        const metarData = await fetchWithRetry(`https://aviationweather.gov/api/data/metar?ids=${icao}&format=json`);
-        const metarText = metarData && metarData[0]?.raw_text || "Geen METAR beschikbaar.";
-        const gekleurdMetar = kleurCodeerTekst(metarText);
-        metarElement.innerHTML = gekleurdMetar ? gekleurdMetar.replace(/\n/g, "<br>") : "Geen METAR beschikbaar.";
-      } catch (err) {
-        console.error("Error fetching METAR:", err);
-        metarElement.textContent = "Fout bij ophalen METAR.";
-      }
+        // Fetch METAR
+        const metarResponse = await fetch(`https://aviationweather.gov/api/data/metar?ids=${icao}&format=xml`);
+        const metarText = await metarResponse.text();
+        const metarParser = new DOMParser();
+        const metarXml = metarParser.parseFromString(metarText, 'text/xml');
+        const metarNode = metarXml.querySelector('METAR');
+        let metarDecoded = 'No METAR data available';
+        if (metarNode) {
+          const rawText = metarNode.querySelector('raw_text')?.textContent || '';
+          const observationTime = formatTime(metarNode.querySelector('observation_time')?.textContent);
+          let wind = metarNode.querySelector('wind_speed')?.textContent || 'Unknown';
+          const windDir = metarNode.querySelector('wind_dir_degrees')?.textContent || '';
+          const windGust = metarNode.querySelector('wind_gust_kt')?.textContent || null;
+          let visibility = metarNode.querySelector('visibility_statute_mi')?.textContent || '10';
+          const visibilityKm = parseFloat(visibility) * 1.60934;
+          const temp = metarNode.querySelector('temp_c')?.textContent || 'Unknown';
+          const dewpoint = metarNode.querySelector('dewpoint_c')?.textContent || 'Unknown';
+          const pressureInHg = metarNode.querySelector('altim_in_hg')?.textContent || 'Unknown';
+          const pressure = pressureInHg !== 'Unknown' ? (parseFloat(pressureInHg) * 33.8639).toFixed(0) : 'Unknown';
+          const clouds = metarNode.querySelectorAll('sky_condition');
+          let cloudText = 'Clear';
+          let lowestCeiling = null;
+          clouds.forEach(cloud => {
+            const cover = cloud.getAttribute('sky_cover');
+            const base = parseCloudHeight(cloud.getAttribute('cloud_base_ft_agl'));
+            if (base && (!lowestCeiling || base < lowestCeiling)) lowestCeiling = base;
+            cloudText = cover + (base ? ` at ${base} ft` : '');
+          });
+          const wxString = metarNode.querySelector('wx_string')?.textContent || '';
 
-      // TAF ophalen
-      try {
-        const tafData = await fetchWithRetry(`https://aviationweather.gov/api/data/taf?ids=${icao}&format=json`);
-        const tafText = tafData && tafData[0]?.raw_text || "Geen TAF beschikbaar.";
-        const gekleurdTaf = kleurCodeerTekst(tafText);
-        tafElement.innerHTML = gekleurdTaf ? gekleurdTaf.replace(/\n/g, "<br>") : "Geen TAF beschikbaar.";
-      } catch (err) {
-        console.error("Error fetching TAF:", err);
-        tafElement.textContent = "Fout bij ophalen TAF.";
-      }
-    }
-
-    function renderStation(title, icao, containerIdPrefix, container) {
-      const div = document.createElement("div");
-      div.className = "station";
-      div.innerHTML = `
-        <h2>${title}</h2>
-        <p><strong>METAR:</strong></p>
-        <pre id="${containerIdPrefix}-metar">Laden...</pre>
-        <p><strong>TAF:</strong></p>
-        <pre id="${containerIdPrefix}-taf">Laden...</pre>
-      `;
-      container.appendChild(div);
-      fetchMetarTaf(icao, containerIdPrefix);
-    }
-
-    function searchWeather() {
-      const input = document.getElementById("searchInput").value.trim();
-      const resultContainer = document.getElementById("searchResult");
-      resultContainer.innerHTML = "";
-
-      if (!input) {
-        alert("Geef minstens één zoekterm in.");
-        return;
-      }
-
-      const terms = input.split(",").map(t => t.trim().toUpperCase());
-
-      terms.forEach(term => {
-        if (!term) return;
-        let match = stations.find(s =>
-          s.icao === term || s.iata === term || s.name.toUpperCase() === term
-        );
-        if (!match && term.length === 4) {
-          match = { name: "Onbekend station", icao: term, iata: "?" };
-        }
-        if (match) {
-          const idPrefix = `zoek-${match.icao}`;
-          renderStation(`${match.name} (${match.iata})`, match.icao, idPrefix, resultContainer);
-        } else {
-          const div = document.createElement("div");
-          div.className = "station";
-          div.innerHTML = `<h2>Station niet gevonden: ${term}</h2>`;
-          resultContainer.appendChild(div);
-        }
-      });
-    }
-
-    function initializeStationButtons() {
-      const selector = document.getElementById("stationsSelector");
-      const output = document.getElementById("stationsOutput");
-
-      stations.sort((a, b) => a.name.localeCompare(b.name)).forEach(station => {
-        const btn = document.createElement("button");
-        btn.textContent = `${station.name} (${station.iata})`;
-        btn.className = "station-button";
-        btn.addEventListener("click", () => {
-          const idPrefix = `${station.icao}-${station.iata}`;
-          if (!document.getElementById(`${idPrefix}-metar`)) {
-            renderStation(`${station.name} (${station.iata})`, station.icao, idPrefix, output);
+          // Apply highlighting
+          if (visibilityKm <= 0.56) visibility = `<span class="highlight-red">${visibilityKm.toFixed(1)} km</span>`;
+          else if (visibilityKm <= 0.81) visibility = `<span class="highlight-orange">${visibilityKm.toFixed(1)} km</span>`;
+          else visibility = `${visibilityKm.toFixed(1)} km`;
+          
+          if (wind !== 'Unknown') {
+            const windSpeed = parseInt(wind);
+            if (windSpeed >= 26) wind = `<span class="highlight-red">${windSpeed} kt from ${windDir}°</span>`;
+            else if (windSpeed >= 21) wind = `<span class="highlight-orange">${windSpeed} kt from ${windDir}°</span>`;
+            else wind = `${windSpeed} kt from ${windDir}°`;
           }
-        });
-        selector.appendChild(btn);
-      });
-    }
+          
+          if (windGust) {
+            const gustSpeed = parseInt(windGust);
+            if (gustSpeed >= 36) wind += `, gusts <span class="highlight-red">${gustSpeed} kt</span>`;
+            else if (gustSpeed >= 25) wind += `, gusts <span class="highlight-orange">${gustSpeed} kt</span>`;
+          }
+          
+          if (lowestCeiling) {
+            if (lowestCeiling <= 200) cloudText = `<span class="highlight-red">${cloudText}</span>`;
+            else if (lowestCeiling <= 399) cloudText = `<span class="highlight-orange">${cloudText}</span>`;
+          }
+          
+          const highlightedWx = highlightText(wxString, severeWeather, 'highlight-red');
 
-    document.getElementById("searchInput").addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        searchWeather();
+          metarDecoded = `
+            Observation time: ${observationTime}<br>
+            Wind: ${wind}<br>
+            Visibility: ${visibility}<br>
+            Clouds: ${cloudText}<br>
+            Weather: ${highlightedWx || 'None'}<br>
+            Temperature/Dewpoint: ${temp}°C / ${dewpoint}°C<br>
+            Pressure: ${pressure} hPa
+          `;
+        }
+
+        // Fetch TAF
+        const tafResponse = await fetch(`https://aviationweather.gov/api/data/taf?ids=${icao}&format=xml`);
+        const tafText = await tafResponse.text();
+        const tafParser = new DOMParser();
+        const tafXml = tafParser.parseFromString(tafText, 'text/xml');
+        const tafNode = tafXml.querySelector('TAF');
+        let tafDecoded = 'No TAF data available';
+        if (tafNode) {
+          const validTime = formatTime(tafNode.querySelector('valid_time')?.textContent);
+          const forecast = [];
+          const fcstGroups = tafNode.querySelectorAll('forecast');
+          fcstGroups.forEach(fc => {
+            const timeFrom = formatTime(fc.querySelector('fcst_time_from')?.textContent);
+            const timeTo = formatTime(fc.querySelector('fcst_time_to')?.textContent);
+            let wind = fc.querySelector('wind_speed_kt')?.textContent || 'Unknown';
+            const windDir = fc.querySelector('wind_dir_degrees')?.textContent || '';
+            const windGust = fc.querySelector('wind_gust_kt')?.textContent || null;
+            let visibility = fc.querySelector('visibility_statute_mi')?.textContent || '10';
+            const visibilityKm = parseFloat(visibility) * 1.60934;
+            const clouds = fc.querySelectorAll('sky_condition');
+            let cloudText = 'Clear';
+            let lowestCeiling = null;
+            clouds.forEach(cloud => {
+              const cover = cloud.getAttribute('sky_cover');
+              const base = parseCloudHeight(cloud.getAttribute('cloud_base_ft_agl'));
+              if (base && (!lowestCeiling || base < lowestCeiling)) lowestCeiling = base;
+              cloudText = cover + (base ? ` at ${base} ft` : '');
+            });
+            const wxString = fc.querySelector('wx_string')?.textContent || '';
+            const change = fc.querySelector('change_indicator')?.textContent || '';
+
+            // Apply highlighting
+            if (visibilityKm <= 0.56) visibility = `<span class="highlight-red">${visibilityKm.toFixed(1)} km</span>`;
+            else if (visibilityKm <= 0.81) visibility = `<span class="highlight-orange">${visibilityKm.toFixed(1)} km</span>`;
+            else visibility = `${visibilityKm.toFixed(1)} km`;
+            
+            if (wind !== 'Unknown') {
+              const windSpeed = parseInt(wind);
+              if (windSpeed >= 26) wind = `<span class="highlight-red">${windSpeed} kt from ${windDir}°</span>`;
+              else if (windSpeed >= 21) wind = `<span class="highlight-orange">${windSpeed} kt from ${windDir}°</span>`;
+              else wind = `${windSpeed} kt from ${windDir}°`;
+            }
+            
+            if (windGust) {
+              const gustSpeed = parseInt(windGust);
+              if (gustSpeed >= 36) wind += `, gusts <span class="highlight-red">${gustSpeed} kt</span>`;
+              else if (gustSpeed >= 25) wind += `, gusts <span class="highlight-orange">${gustSpeed} kt</span>`;
+            }
+            
+            if (lowestCeiling) {
+              if (lowestCeiling <= 200) cloudText = `<span class="highlight-red">${cloudText}</span>`;
+              else if (lowestCeiling <= 399) cloudText = `<span class="highlight-orange">${cloudText}</span>`;
+            }
+            
+            const highlightedWx = highlightText(wxString, severeWeather, 'highlight-red');
+
+            forecast.push(`
+              ${change} ${timeFrom} to ${timeTo}:<br>
+              &nbsp;&nbsp;Wind: ${wind}<br>
+              &nbsp;&nbsp;Visibility: ${visibility}<br>
+              &nbsp;&nbsp;Clouds: ${cloudText}<br>
+              &nbsp;&nbsp;Weather: ${highlightedWx || 'None'}
+            `);
+          });
+          tafDecoded = `
+            Valid: ${validTime}<br>
+            ${forecast.join('<br><br>')}
+          `;
+        }
+
+        // Display data
+        weatherDiv.innerHTML = `
+          <h2 class="text-xl font-bold mb-2 text-[#D40511]">${airportName} Weather Data</h2>
+          <h3 class="font-semibold">Decoded METAR</h3>
+          <p>${metarDecoded}</p>
+          <h3 class="font-semibold mt-4">Decoded TAF</h3>
+          <p>${tafDecoded}</p>
+        `;
+      } catch (error) {
+        weatherDiv.innerHTML = `<p>Error fetching data: ${error.message}</p>`;
       }
-    });
-
-    // Initializeer de stationsknoppen bij het laden van de pagina
-    initializeStationButtons();
+    }
   </script>
 </body>
 </html>
