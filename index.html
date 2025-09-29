@@ -144,31 +144,6 @@
 				{ name: "Toulouse", icao: "LFBO", iata: "TLS" },
 				{ name: "Vitoria", icao: "LEVT", iata: "VIT" },    ];
 
-   async function fetchWithRetry(url, retries = 3, delay = 1000) {
-  const proxies = [
-    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-    u => `https://thingproxy.freeboard.io/fetch/${u}`
-  ];
-
-  for (const proxy of proxies) {
-    for (let i = 0; i < retries; i++) {
-      try {
-        const response = await fetch(proxy(url));
-        if (!response.ok) throw new Error(`Foutstatus: ${response.status}`);
-        return await response.text();
-      } catch (error) {
-        if (i < retries - 1) {
-          await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
-        } else {
-          console.warn(`Proxy mislukt (${proxy(url)}), poging ${i + 1}/${retries}`);
-        }
-      }
-    }
-  }
-
-  throw new Error("Alle proxies en pogingen zijn mislukt.");
-}
-
     function kleurCodeerTekst(tekst) {
   if (!tekst) return tekst;
 
