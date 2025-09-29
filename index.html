@@ -226,20 +226,24 @@
   }).join('\n');
 }
 
-    function fetchMetarTaf(icao, containerIdPrefix) {
+   function fetchMetarTaf(icao, containerIdPrefix) {
   // METAR
-  fetchWithRetry(`https://aviationweather.gov/api/data/metar?ids=${icao}&format=decoded`)
+  fetchWithRetry(`https://aviationweather.gov/api/data/metar?ids=${icao}&format=json`)
     .then(response => {
       if (response.status === 204) {
-        // No METAR data
-        return "";
+        return null; // geen data
       }
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-      return response.text();
+      return response.json();
     })
-    .then(text => {
+    .then(json => {
+      let text = "";
+      if (json && json.data && json.data.length > 0) {
+        // gebruik raw_text van het eerste resultaat
+        text = json.data[0].raw_text || "";
+      }
       const gekleurd = kleurCodeerTekst(text);
       document.getElementById(`${containerIdPrefix}-metar`).innerHTML =
         (gekleurd ? gekleurd.replace(/\n/g, "<br>") : "") || "Geen METAR beschikbaar.";
@@ -251,17 +255,21 @@
     });
 
   // TAF
-  fetchWithRetry(`https://aviationweather.gov/api/data/taf?ids=${icao}&format=decoded`)
+  fetchWithRetry(`https://aviationweather.gov/api/data/taf?ids=${icao}&format=json`)
     .then(response => {
       if (response.status === 204) {
-        return "";
+        return null;
       }
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-      return response.text();
+      return response.json();
     })
-    .then(text => {
+    .then(json => {
+      let text = "";
+      if (json && json.data && json.data.length > 0) {
+        text = json.data[0].raw_text || "";
+      }
       const gekleurd = kleurCodeerTekst(text);
       document.getElementById(`${containerIdPrefix}-taf`).innerHTML =
         (gekleurd ? gekleurd.replace(/\n/g, "<br>") : "") || "Geen TAF beschikbaar.";
