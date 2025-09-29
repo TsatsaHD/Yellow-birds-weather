@@ -226,22 +226,42 @@
   }).join('\n');
 }
 
-   function fetchMetarTaf(icao, containerIdPrefix) {
-  // METAR
+   // Proxy fetcher: geeft volledige Response terug
+async function fetchWithRetry(url, retries = 3, delay = 1000) {
+  const proxies = [
+    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u => `https://thingproxy.freeboard.io/fetch/${u}`
+  ];
+
+  for (const proxy of proxies) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const response = await fetch(proxy(url));
+        if (!response.ok) throw new Error(`Foutstatus: ${response.status}`);
+        return response; // <-- response object doorgeven
+      } catch (error) {
+        if (i < retries - 1) {
+          await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+        } else {
+          console.warn(`Proxy mislukt (${proxy(url)}), poging ${i + 1}/${retries}`);
+        }
+      }
+    }
+  }
+
+  throw new Error("Alle proxies en pogingen zijn mislukt.");
+}
+
+function fetchMetarTaf(icao, containerIdPrefix) {
+  // === METAR ===
   fetchWithRetry(`https://aviationweather.gov/api/data/metar?ids=${icao}&format=json`)
     .then(response => {
-      if (response.status === 204) {
-        return null; // geen data
-      }
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
+      if (response.status === 204) return null;
       return response.json();
     })
     .then(json => {
       let text = "";
       if (json && json.data && json.data.length > 0) {
-        // gebruik raw_text van het eerste resultaat
         text = json.data[0].raw_text || "";
       }
       const gekleurd = kleurCodeerTekst(text);
@@ -254,15 +274,10 @@
         "Fout bij ophalen METAR.";
     });
 
-  // TAF
+  // === TAF ===
   fetchWithRetry(`https://aviationweather.gov/api/data/taf?ids=${icao}&format=json`)
     .then(response => {
-      if (response.status === 204) {
-        return null;
-      }
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
+      if (response.status === 204) return null;
       return response.json();
     })
     .then(json => {
