@@ -227,7 +227,7 @@
 }
 
     function fetchMetarTaf(icao, containerIdPrefix) {
-  fetchWithRetry(`https://aviationweather.gov/api/data/metar.php?ids=${icao}&format=decoded`)
+  fetchWithRetry(`https://aviationweather.gov/cgi-bin/data/metar.php?ids=${icao}&format=decoded`)
     .then(data => {
       const gekleurd = kleurCodeerTekst(data);
       document.getElementById(`${containerIdPrefix}-metar`).innerHTML = gekleurd.replace(/\n/g, "<br>") || "Geen METAR beschikbaar.";
@@ -236,7 +236,7 @@
       document.getElementById(`${containerIdPrefix}-metar`).textContent = "Fout bij ophalen METAR.";
     });
 
-  fetchWithRetry(`https://aviationweather.gov/api/data/taf.php?ids=${icao}&format=decoded`)
+  fetchWithRetry(`https://aviationweather.gov/cgi-bin/data/taf.php?ids=${icao}&format=decoded`)
     .then(data => {
       const gekleurd = kleurCodeerTekst(data);
       document.getElementById(`${containerIdPrefix}-taf`).innerHTML = gekleurd.replace(/\n/g, "<br>") || "Geen TAF beschikbaar.";
