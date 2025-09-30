@@ -11,8 +11,8 @@
       color: #D40511; /* DHL Red for headings and buttons */
     }
     button {
-      background-color: #D40511;
-      color: #FFC107;
+      background-color: #D40511; /* Red buttons */
+      color: #FFFF00; /* Yellow text */
       width: 100%;
       text-align: center;
     }
@@ -94,14 +94,137 @@
   </div>
 
   <script>
-    const severeWeather = ['TSRA', 'TS', 'thunderstorm', 'SN', 'snow', 'FG', 'fog', 'GR', 'hail', 'GS', 'small hail', 'snow pellets', 'BR', 'mist', 'HZ', 'haze', 'FU', 'smoke', 'DS', 'duststorm', 'SS', 'sandstorm', 'severe wind', 'FZ', 'freezing', 'VA', 'volcanic ash', 'DU', 'widespread dust', 'SQ', 'squall', 'FC', 'funnel cloud', 'PO', 'dust devils', 'ice crystals', 'PL', 'ice pellets', 'SG', 'snow grains', 'SA', 'sand', 'CB', 'cumulonimbus', 'TCU', 'towering cumulus', 'WS', 'wind shear'];
+    const weatherTranslations = {
+      'BR': 'mist',
+      'TS': 'thunderstorm',
+      'FG': 'fog',
+      'HZ': 'haze',
+      'FU': 'smoke',
+      'FZ': 'freezing',
+      'VA': 'volcanic ash',
+      'DU': 'widespread dust',
+      'SQ': 'squall',
+      'FC': 'funnel cloud',
+      'PO': 'dust devils',
+      'SA': 'sand',
+      'CB': 'cumulonimbus',
+      'TCU': 'towering cumulus',
+      'WS': 'wind shear',
+      '+': 'heavy ',
+      '-': 'light ',
+      'VC': 'in the vicinity ',
+      'FZRA': 'freezing rain',
+      'NSW': 'no significant weather',
+      'ALQDS': 'all quadrants',
+      'FM': 'from',
+      'VRB': 'variable direction',
+      'BCFG': 'patches of fog',
+      'MIFG': 'shallow fog',
+      'PRFG': 'partial fog',
+      'DRSN': 'drifting snow',
+      'BLSN': 'blowing snow',
+      'MIBR': 'shallow mist',
+      'PRBR': 'partial mist',
+      'DRDU': 'drifting dust',
+      'DRSA': 'drifting sand',
+      'BLDU': 'blowing dust',
+      'BLSA': 'blowing sand',
+      'BECMG': 'becoming',
+      'BECM': 'becoming',
+      'TEMPO': 'temporary fluctuations',
+      'PROB30': '30% chance',
+      'PROB40': '40% chance',
+      'NOSIG': 'no significant change expected',
+      '-RA': 'light rain',
+      '+RA': 'heavy rain',
+      '-DZ': 'light drizzle',
+      '+DZ': 'heavy drizzle',
+      '-SN': 'light snow',
+      '+SN': 'heavy snow',
+      '-SG': 'light snow grains',
+      '+SG': 'heavy snow grains',
+      '-IC': 'light ice crystals',
+      '+IC': 'heavy ice crystals',
+      '-PL': 'light ice pellets',
+      '+PL': 'heavy ice pellets',
+      '-GR': 'light hail',
+      '+GR': 'heavy hail',
+      '-GS': 'light small hail or snow pellets',
+      '+GS': 'heavy small hail or snow pellets',
+      '-UP': 'light unknown precipitation',
+      '+UP': 'heavy unknown precipitation',
+      '-FG': 'light fog',
+      '+FG': 'dense fog',
+      '-SS': 'light sandstorm',
+      '+SS': 'heavy sandstorm',
+      '-DS': 'light duststorm',
+      '+DS': 'heavy duststorm',
+      'SHRA': 'rain showers',
+      '-SHRA': 'light rain showers',
+      '+SHRA': 'heavy rain showers',
+      '-SHSN': 'light snow showers',
+      '+SHSN': 'heavy snow showers',
+      '-TSRA': 'thunderstorm with light rain',
+      '+TSRA': 'thunderstorm with heavy rain',
+      '-TSSN': 'thunderstorm with light snow',
+      '+TSSN': 'thunderstorm with heavy snow',
+      '-TSGR': 'thunderstorm with light hail',
+      '+TSGR': 'thunderstorm with heavy hail'
+    };
 
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function decodeWeather(wxString) {
+      if (!wxString) return '';
+      // Split the wx_string into individual codes, handling concatenated codes
+      const codes = wxString.match(/[+-]?[A-Z]{2,4}/g) || [];
+      let decodedParts = [];
+      
+      // Process each code individually
+      codes.forEach(code => {
+        let decoded = code;
+        // Check for full code matches first (e.g., -SHRA, +TSRA)
+        if (weatherTranslations[code]) {
+          decoded = weatherTranslations[code];
+        } else {
+          // Handle standalone codes (e.g., SHRA, TS)
+          for (const [key, translation] of Object.entries(weatherTranslations)) {
+            if (key === code) {
+              decoded = translation;
+              break;
+            }
+          }
+        }
+        decodedParts.push(decoded);
+      });
+
+      // Join decoded parts with commas and convert to lowercase (except specific terms)
+      let result = decodedParts.join(', ');
+      return result.replace(/Becoming|Temporary fluctuations|30% chance|40% chance/g, match => match)
+                   .toLowerCase();
+    }
 
     function highlightText(text, conditions, className) {
       let highlighted = text;
-      conditions.forEach(condition => {
-        const regex = new RegExp(`\\b${condition}\\b`, 'gi');
+      const highlightConditions = conditions.filter(c => 
+        c !== 'no significant weather' && 
+        c !== 'from' && 
+        c !== 'variable direction' && 
+        c !== 'Becoming' && 
+        c !== 'Temporary fluctuations' &&
+        c !== 'rain showers' &&
+        c !== 'light drizzle' &&
+        c !== 'heavy drizzle' &&
+        c !== 'no significant change expected' &&
+        c !== 'light rain' &&
+        c !== 'light rain showers'
+      );
+      highlightConditions.forEach(condition => {
+        const regex = new RegExp(`\\b${escapeRegExp(condition)}\\b`, 'gi');
         highlighted = highlighted.replace(regex, `<span class="${className}">${condition}</span>`);
       });
       return highlighted;
@@ -113,15 +236,35 @@
       return heightMatch ? parseInt(heightMatch[1]) : null;
     }
 
+    function decodeCloudCover(cover) {
+      switch (cover) {
+        case 'FEW': return 'few clouds';
+        case 'SCT': return 'scattered clouds';
+        case 'BKN': return 'broken clouds';
+        case 'OVC': return 'overcast';
+        case 'NSC': return 'no significant cloud';
+        case 'CAVOK': return 'ceiling and visibility ok';
+        case 'CLR': return 'clear';
+        case 'SKC': return 'sky clear';
+        default: return cover;
+      }
+    }
+
     function formatTime(isoTime) {
       if (!isoTime) return 'Unknown';
       const date = new Date(isoTime);
       const day = date.getUTCDate().toString().padStart(2, '0');
       const month = months[date.getUTCMonth()];
-      const year = date.getUTCFullYear();
       const hours = date.getUTCHours().toString().padStart(2, '0');
       const minutes = date.getUTCMinutes().toString().padStart(2, '0');
-      return `${day} ${month} ${year} ${hours}:${minutes} UTC`;
+      return `${day} ${month} ${hours}:${minutes} UTC`;
+    }
+
+    function isInPast(isoTime) {
+      if (!isoTime) return false;
+      const currentTime = new Date('2025-09-30T10:53:00Z'); // 12:53 PM CEST = 10:53 UTC on Sep 30, 2025
+      const time = new Date(isoTime);
+      return time < currentTime;
     }
 
     async function fetchWeather(icao, airportName) {
@@ -137,9 +280,8 @@
         const metarNode = metarXml.querySelector('METAR');
         let metarDecoded = 'No METAR data available';
         if (metarNode) {
-          const rawText = metarNode.querySelector('raw_text')?.textContent || '';
           const observationTime = formatTime(metarNode.querySelector('observation_time')?.textContent);
-          let wind = metarNode.querySelector('wind_speed')?.textContent || 'Unknown';
+          let wind = metarNode.querySelector('wind_speed_kt')?.textContent || 'Unknown';
           const windDir = metarNode.querySelector('wind_dir_degrees')?.textContent || '';
           const windGust = metarNode.querySelector('wind_gust_kt')?.textContent || null;
           let visibility = metarNode.querySelector('visibility_statute_mi')?.textContent || '10';
@@ -149,26 +291,39 @@
           const pressureInHg = metarNode.querySelector('altim_in_hg')?.textContent || 'Unknown';
           const pressure = pressureInHg !== 'Unknown' ? (parseFloat(pressureInHg) * 33.8639).toFixed(0) : 'Unknown';
           const clouds = metarNode.querySelectorAll('sky_condition');
-          let cloudText = 'Clear';
+          let cloudLayers = [];
           let lowestCeiling = null;
+          let hasCavok = false;
           clouds.forEach(cloud => {
             const cover = cloud.getAttribute('sky_cover');
-            const base = parseCloudHeight(cloud.getAttribute('cloud_base_ft_agl'));
-            if (base && (!lowestCeiling || base < lowestCeiling)) lowestCeiling = base;
-            cloudText = cover + (base ? ` at ${base} ft` : '');
+            const baseStr = cloud.getAttribute('cloud_base_ft_agl');
+            const base = baseStr ? parseInt(baseStr) : null;
+            if (cover === 'CAVOK') {
+              hasCavok = true;
+            }
+            if ((cover === 'BKN' || cover === 'OVC') && base && (!lowestCeiling || base < lowestCeiling)) {
+              lowestCeiling = base;
+            }
+            const decodedCover = decodeCloudCover(cover).toLowerCase();
+            cloudLayers.push(decodedCover + (base ? ` at ${base} ft` : ''));
           });
+          let cloudText = cloudLayers.join(', ') || 'clear';
           const wxString = metarNode.querySelector('wx_string')?.textContent || '';
 
           // Apply highlighting
-          if (visibilityKm <= 0.56) visibility = `<span class="highlight-red">${visibilityKm.toFixed(1)} km</span>`;
-          else if (visibilityKm <= 0.81) visibility = `<span class="highlight-orange">${visibilityKm.toFixed(1)} km</span>`;
-          else visibility = `${visibilityKm.toFixed(1)} km`;
+          let visibilityText = `${visibilityKm.toFixed(1)} km`;
+          if (visibilityKm <= 0.56) visibilityText = `<span class="highlight-red">${visibilityText}</span>`;
+          else if (visibilityKm <= 0.81) visibilityText = `<span class="highlight-orange">${visibilityText}</span>`;
           
           if (wind !== 'Unknown') {
-            const windSpeed = parseInt(wind);
-            if (windSpeed >= 26) wind = `<span class="highlight-red">${windSpeed} kt from ${windDir}°</span>`;
-            else if (windSpeed >= 21) wind = `<span class="highlight-orange">${windSpeed} kt from ${windDir}°</span>`;
-            else wind = `${windSpeed} kt from ${windDir}°`;
+            if (windDir === 'VRB') {
+              wind = `${wind} kt variable direction`;
+            } else {
+              const windSpeed = parseInt(wind);
+              if (windSpeed >= 26) wind = `<span class="highlight-red">${windSpeed} kt from ${windDir}°</span>`;
+              else if (windSpeed >= 21) wind = `<span class="highlight-orange">${windSpeed} kt from ${windDir}°</span>`;
+              else wind = `${windSpeed} kt from ${windDir}°`;
+            }
           }
           
           if (windGust) {
@@ -182,15 +337,22 @@
             else if (lowestCeiling <= 399) cloudText = `<span class="highlight-orange">${cloudText}</span>`;
           }
           
-          const highlightedWx = highlightText(wxString, severeWeather, 'highlight-red');
+          const decodedWx = decodeWeather(wxString);
+          const highlightedWx = highlightText(decodedWx, Object.values(weatherTranslations), 'highlight-red');
 
+          if (hasCavok) {
+            visibilityText = '10 km or more';
+            cloudText = 'ceiling and visibility ok';
+          }
+
+          // Build METAR output, excluding Wind and Weather lines if no value or unknown
           metarDecoded = `
             Observation time: ${observationTime}<br>
-            Wind: ${wind}<br>
-            Visibility: ${visibility}<br>
+            ${wind && wind !== 'Unknown' ? `Wind: ${wind}<br>` : ''}
+            Visibility: ${visibilityText}<br>
             Clouds: ${cloudText}<br>
-            Weather: ${highlightedWx || 'None'}<br>
-            Temperature/Dewpoint: ${temp}°C / ${dewpoint}°C<br>
+            ${highlightedWx && highlightedWx !== 'none' ? `Weather: ${highlightedWx}<br>` : ''}
+            Temperature & Dewpoint: ${temp}°C / ${dewpoint}°C<br>
             Pressure: ${pressure} hPa
           `;
         }
@@ -203,39 +365,54 @@
         const tafNode = tafXml.querySelector('TAF');
         let tafDecoded = 'No TAF data available';
         if (tafNode) {
-          const validTime = formatTime(tafNode.querySelector('valid_time')?.textContent);
           const forecast = [];
           const fcstGroups = tafNode.querySelectorAll('forecast');
           fcstGroups.forEach(fc => {
+            const timeTo = fc.querySelector('fcst_time_to')?.textContent;
+            if (isInPast(timeTo)) return; // Skip past forecast periods
             const timeFrom = formatTime(fc.querySelector('fcst_time_from')?.textContent);
-            const timeTo = formatTime(fc.querySelector('fcst_time_to')?.textContent);
+            const timeToText = formatTime(timeTo);
             let wind = fc.querySelector('wind_speed_kt')?.textContent || 'Unknown';
             const windDir = fc.querySelector('wind_dir_degrees')?.textContent || '';
             const windGust = fc.querySelector('wind_gust_kt')?.textContent || null;
             let visibility = fc.querySelector('visibility_statute_mi')?.textContent || '10';
             const visibilityKm = parseFloat(visibility) * 1.60934;
             const clouds = fc.querySelectorAll('sky_condition');
-            let cloudText = 'Clear';
+            let cloudLayers = [];
             let lowestCeiling = null;
+            let hasCavok = false;
             clouds.forEach(cloud => {
               const cover = cloud.getAttribute('sky_cover');
-              const base = parseCloudHeight(cloud.getAttribute('cloud_base_ft_agl'));
-              if (base && (!lowestCeiling || base < lowestCeiling)) lowestCeiling = base;
-              cloudText = cover + (base ? ` at ${base} ft` : '');
+              const baseStr = cloud.getAttribute('cloud_base_ft_agl');
+              const base = baseStr ? parseInt(baseStr) : null;
+              if (cover === 'CAVOK') {
+                hasCavok = true;
+              }
+              if ((cover === 'BKN' || cover === 'OVC') && base && (!lowestCeiling || base < lowestCeiling)) {
+                lowestCeiling = base;
+              }
+              const decodedCover = decodeCloudCover(cover).toLowerCase();
+              cloudLayers.push(decodedCover + (base ? ` at ${base} ft` : ''));
             });
+            let cloudText = cloudLayers.join(', ') || 'clear';
             const wxString = fc.querySelector('wx_string')?.textContent || '';
-            const change = fc.querySelector('change_indicator')?.textContent || '';
+            const changeIndicator = fc.querySelector('change_indicator')?.textContent || '';
+            const change = changeIndicator ? decodeWeather(changeIndicator) + ' ' : '';
 
             // Apply highlighting
-            if (visibilityKm <= 0.56) visibility = `<span class="highlight-red">${visibilityKm.toFixed(1)} km</span>`;
-            else if (visibilityKm <= 0.81) visibility = `<span class="highlight-orange">${visibilityKm.toFixed(1)} km</span>`;
-            else visibility = `${visibilityKm.toFixed(1)} km`;
+            let visibilityText = `${visibilityKm.toFixed(1)} km`;
+            if (visibilityKm <= 0.56) visibilityText = `<span class="highlight-red">${visibilityText}</span>`;
+            else if (visibilityKm <= 0.81) visibilityText = `<span class="highlight-orange">${visibilityText}</span>`;
             
             if (wind !== 'Unknown') {
-              const windSpeed = parseInt(wind);
-              if (windSpeed >= 26) wind = `<span class="highlight-red">${windSpeed} kt from ${windDir}°</span>`;
-              else if (windSpeed >= 21) wind = `<span class="highlight-orange">${windSpeed} kt from ${windDir}°</span>`;
-              else wind = `${windSpeed} kt from ${windDir}°`;
+              if (windDir === 'VRB') {
+                wind = `${wind} kt variable direction`;
+              } else {
+                const windSpeed = parseInt(wind);
+                if (windSpeed >= 26) wind = `<span class="highlight-red">${windSpeed} kt from ${windDir}°</span>`;
+                else if (windSpeed >= 21) wind = `<span class="highlight-orange">${windSpeed} kt from ${windDir}°</span>`;
+                else wind = `${windSpeed} kt from ${windDir}°`;
+              }
             }
             
             if (windGust) {
@@ -249,20 +426,24 @@
               else if (lowestCeiling <= 399) cloudText = `<span class="highlight-orange">${cloudText}</span>`;
             }
             
-            const highlightedWx = highlightText(wxString, severeWeather, 'highlight-red');
+            const decodedWx = decodeWeather(wxString);
+            const highlightedWx = highlightText(decodedWx, Object.values(weatherTranslations), 'highlight-red');
 
+            if (hasCavok) {
+              visibilityText = '10 km or more';
+              cloudText = 'ceiling and visibility ok';
+            }
+
+            // Build TAF forecast, excluding Wind and Weather lines if no value or unknown
             forecast.push(`
-              ${change} ${timeFrom} to ${timeTo}:<br>
-              &nbsp;&nbsp;Wind: ${wind}<br>
-              &nbsp;&nbsp;Visibility: ${visibility}<br>
+              ${change}${timeFrom} to ${timeToText}:<br>
+              ${wind && wind !== 'Unknown' ? `&nbsp;&nbsp;Wind: ${wind}<br>` : ''}
+              &nbsp;&nbsp;Visibility: ${visibilityText}<br>
               &nbsp;&nbsp;Clouds: ${cloudText}<br>
-              &nbsp;&nbsp;Weather: ${highlightedWx || 'None'}
+              ${highlightedWx && highlightedWx !== 'none' ? `&nbsp;&nbsp;Weather: ${highlightedWx}<br>` : ''}
             `);
           });
-          tafDecoded = `
-            Valid: ${validTime}<br>
-            ${forecast.join('<br><br>')}
-          `;
+          tafDecoded = forecast.length > 0 ? forecast.join('<br><br>') : 'No TAF data available';
         }
 
         // Display data
