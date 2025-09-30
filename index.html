@@ -94,6 +94,8 @@
   </div>
 
   <script>
+    const API_KEY = '2NPZIam7GaYNXE5I9n8CjOQbLRL0KMEpe';  // <-- Replace with your AVWX REST API token
+
     const weatherTranslations = {
       'BR': 'mist',
       'MIBR': 'shallow mist',
@@ -193,7 +195,6 @@
 
     function decodeWeather(wxString) {
       if (!wxString) return 'none';
-      // Extract PROB30, PROB40 with other weather codes, handling + and - prefixes:
       const codes = wxString.match(/PROB(?:30|40)|[+-]?[A-Z]{2,4}/g) || [];
       return codes.map(code => weatherTranslations[code] || code).join(', ');
     }
@@ -234,7 +235,6 @@
       return new Date(isoTime) < new Date();
     }
 
-    // Decode cloud cover like before - minimal changes to your UX:
     function decodeCloudCover(cover) {
       switch (cover) {
         case 'FEW': return 'few clouds';
@@ -249,34 +249,35 @@
       }
     }
 
-    // Fetch and process METAR and TAF from AVWX Rest API JSON
     async function fetchWeather(icao, airportName) {
       const weatherDiv = document.getElementById('weather-data');
       weatherDiv.innerHTML = '<p>Loading...</p>';
 
       try {
-        // METAR JSON endpoint
         const metarResponse = await fetch(`https://avwx.rest/api/metar/${icao}`, {
-          headers: { 'Accept': 'application/json' }
+          headers: {
+            'Authorization': `Bearer ${API_KEY}`,
+            'Accept': 'application/json'
+          }
         });
         if (!metarResponse.ok) throw new Error(`METAR fetch failed: ${metarResponse.status}`);
         const metarData = await metarResponse.json();
 
-        // TAF JSON endpoint
         const tafResponse = await fetch(`https://avwx.rest/api/taf/${icao}`, {
-          headers: { 'Accept': 'application/json' }
+          headers: {
+            'Authorization': `Bearer ${API_KEY}`,
+            'Accept': 'application/json'
+          }
         });
         if (!tafResponse.ok) throw new Error(`TAF fetch failed: ${tafResponse.status}`);
         const tafData = await tafResponse.json();
 
         // Decode METAR
         let metarDecoded = "No METAR data available";
-        if (metarData.issues && metarData.issues.nodata) {
+        if (metarData.issues?.nodata) {
           metarDecoded = "No METAR data available";
         } else {
           let visibilityText = metarData.visibility?.value ? `${(metarData.visibility.value * 1.60934).toFixed(1)} km` : "Unknown";
-
-          // Highlight visibility for low ranges
           if (metarData.visibility?.value) {
             if (metarData.visibility.value * 1.60934 <= 0.56) {
               visibilityText = `<span class="highlight-red">${visibilityText}</span>`;
@@ -284,19 +285,14 @@
               visibilityText = `<span class="highlight-orange">${visibilityText}</span>`;
             }
           }
-
-          // Wind decoding with highlights
+          
           let wind = "Unknown";
           if (metarData.wind_speed) {
             const speed = parseInt(metarData.wind_speed.value);
             const dir = metarData.wind_direction && metarData.wind_direction.value !== 0 ? `${metarData.wind_direction.value}°` : 'variable direction';
-            if (speed >= 26) {
-              wind = `<span class="highlight-red">${speed} kt from ${dir}</span>`;
-            } else if (speed >= 21) {
-              wind = `<span class="highlight-orange">${speed} kt from ${dir}</span>`;
-            } else {
-              wind = `${speed} kt from ${dir}`;
-            }
+            if (speed >= 26) wind = `<span class="highlight-red">${speed} kt from ${dir}</span>`;
+            else if (speed >= 21) wind = `<span class="highlight-orange">${speed} kt from ${dir}</span>`;
+            else wind = `${speed} kt from ${dir}`;
             if (metarData.wind_gust && metarData.wind_gust.value) {
               const gustSpeed = parseInt(metarData.wind_gust.value);
               if (gustSpeed >= 36) wind += `, gusts <span class="highlight-red">${gustSpeed} kt</span>`;
@@ -305,25 +301,21 @@
             }
           }
 
-          // Clouds decoding
           let cloudText = "clear";
           let lowestCeiling = null;
           let hasCavok = false;
           if (Array.isArray(metarData.clouds)) {
             const cloudLayers = [];
             metarData.clouds.forEach(cloud => {
-              if (cloud.code === 'CAVOK') {
-                hasCavok = true;
-              }
+              if (cloud.code === 'CAVOK') hasCavok = true;
               const cover = decodeCloudCover(cloud.code);
               if ((cloud.code === 'BKN' || cloud.code === 'OVC') && cloud.base_ft) {
                 if (!lowestCeiling || cloud.base_ft < lowestCeiling) lowestCeiling = cloud.base_ft;
               }
               cloudLayers.push(cover + (cloud.base_ft ? ` at ${cloud.base_ft} ft` : ''));
             });
-            if (hasCavok) {
-              cloudText = 'ceiling and visibility ok';
-            } else if (cloudLayers.length) {
+            if (hasCavok) cloudText = 'ceiling and visibility ok';
+            else if (cloudLayers.length) {
               cloudText = cloudLayers.join(', ');
               if (lowestCeiling) {
                 if (lowestCeiling <= 200) cloudText = `<span class="highlight-red">${cloudText}</span>`;
@@ -332,13 +324,9 @@
             }
           }
 
-          // Weather decoding + highlight
           const decodedWx = decodeWeather(metarData.raw);
           const highlightedWx = highlightText(decodedWx);
-
-          // Observation time
           const observationTime = metarData.time ? formatTime(metarData.time.dt) : 'Unknown';
-
           const temp = metarData.temperature ? metarData.temperature.value : 'Unknown';
           const dewpoint = metarData.dewpoint ? metarData.dewpoint.value : 'Unknown';
           const pressure = metarData.altimeter ? metarData.altimeter.value.toFixed(0) : 'Unknown';
@@ -366,18 +354,13 @@
             const sections = forecastItems.map(fc => {
               const from = formatTime(fc.time_from);
               const to = formatTime(fc.time_end);
-              // Wind
               let wind = "Unknown";
               if (fc.wind_speed) {
                 const speed = parseInt(fc.wind_speed.value);
                 const dir = fc.wind_direction && fc.wind_direction.value !== 0 ? `${fc.wind_direction.value}°` : 'variable direction';
-                if (speed >= 26) {
-                  wind = `<span class="highlight-red">${speed} kt from ${dir}</span>`;
-                } else if (speed >= 21) {
-                  wind = `<span class="highlight-orange">${speed} kt from ${dir}</span>`;
-                } else {
-                  wind = `${speed} kt from ${dir}`;
-                }
+                if (speed >= 26) wind = `<span class="highlight-red">${speed} kt from ${dir}</span>`;
+                else if (speed >= 21) wind = `<span class="highlight-orange">${speed} kt from ${dir}</span>`;
+                else wind = `${speed} kt from ${dir}`;
                 if (fc.wind_gust && fc.wind_gust.value) {
                   const gustSpeed = parseInt(fc.wind_gust.value);
                   if (gustSpeed >= 36) wind += `, gusts <span class="highlight-red">${gustSpeed} kt</span>`;
@@ -386,7 +369,6 @@
                 }
               }
 
-              // Visibility
               let visibilityText = fc.visibility && fc.visibility.value ? `${(fc.visibility.value * 1.60934).toFixed(1)} km` : "Unknown";
               if (fc.visibility && fc.visibility.value) {
                 if (fc.visibility.value * 1.60934 <= 0.56) {
@@ -396,7 +378,6 @@
                 }
               }
 
-              // Clouds decode
               let cloudText = "clear";
               let lowestCeiling = null;
               let hasCavok = false;
@@ -410,9 +391,8 @@
                   }
                   cloudLayers.push(cover + (cloud.base_ft ? ` at ${cloud.base_ft} ft` : ''));
                 });
-                if (hasCavok) {
-                  cloudText = 'ceiling and visibility ok';
-                } else if (cloudLayers.length) {
+                if (hasCavok) cloudText = 'ceiling and visibility ok';
+                else if (cloudLayers.length) {
                   cloudText = cloudLayers.join(', ');
                   if (lowestCeiling) {
                     if (lowestCeiling <= 200) cloudText = `<span class="highlight-red">${cloudText}</span>`;
@@ -421,7 +401,6 @@
                 }
               }
 
-              // Weather decode and highlight
               let wxString = fc.raw || "";
               if (fc.change_indicator) {
                 wxString = fc.change_indicator + " " + wxString;
@@ -450,8 +429,8 @@
           <p>${tafDecoded}</p>
         `;
       }
-      catch (error) {
-        weatherDiv.innerHTML = `<p>Error fetching data: ${error.message}</p>`;
+      catch(err) {
+        weatherDiv.innerHTML = `<p>Error fetching data: ${err.message}</p>`;
       }
     }
   </script>
