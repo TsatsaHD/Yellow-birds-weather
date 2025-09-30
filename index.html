@@ -56,11 +56,37 @@
   <h1 class="text-3xl font-bold mb-6">Airport Weather Information</h1>
 
   <div class="grid-container">
-    <!-- buttons unchanged -->
     <button onclick="fetchWeather('EHAM', 'Amsterdam (AMS)')" class="px-4 py-2 rounded-lg font-semibold">Amsterdam (AMS)</button>
     <button onclick="fetchWeather('OBBI', 'Bahrain (BAH)')" class="px-4 py-2 rounded-lg font-semibold">Bahrain (BAH)</button>
     <button onclick="fetchWeather('LEBL', 'Barcelona (BCN)')" class="px-4 py-2 rounded-lg font-semibold">Barcelona (BCN)</button>
-    <!-- ... other buttons stay the same ... -->
+    <button onclick="fetchWeather('LFSB', 'Basel/Mulhouse (BSL/MLH)')" class="px-4 py-2 rounded-lg font-semibold">Basel/Mulhouse (BSL/MLH)</button>
+    <button onclick="fetchWeather('LIPE', 'Bologna (BLQ)')" class="px-4 py-2 rounded-lg font-semibold">Bologna (BLQ)</button>
+    <button onclick="fetchWeather('LFBD', 'Bordeaux (BOD)')" class="px-4 py-2 rounded-lg font-semibold">Bordeaux (BOD)</button>
+    <button onclick="fetchWeather('EBBR', 'Brussels (BRU)')" class="px-4 py-2 rounded-lg font-semibold">Brussels (BRU)</button>
+    <button onclick="fetchWeather('LHBP', 'Budapest (BUD)')" class="px-4 py-2 rounded-lg font-semibold">Budapest (BUD)</button>
+    <button onclick="fetchWeather('GMMN', 'Casablanca (CMN)')" class="px-4 py-2 rounded-lg font-semibold">Casablanca (CMN)</button>
+    <button onclick="fetchWeather('KCVG', 'Cincinnati (CVG)')" class="px-4 py-2 rounded-lg font-semibold">Cincinnati (CVG)</button>
+    <button onclick="fetchWeather('EDDK', 'Cologne (CGN)')" class="px-4 py-2 rounded-lg font-semibold">Cologne (CGN)</button>
+    <button onclick="fetchWeather('EKCH', 'Copenhagen (CPH)')" class="px-4 py-2 rounded-lg font-semibold">Copenhagen (CPH)</button>
+    <button onclick="fetchWeather('EIDW', 'Dublin (DUB)')" class="px-4 py-2 rounded-lg font-semibold">Dublin (DUB)</button>
+    <button onclick="fetchWeather('EGNX', 'East Midlands (EMA)')" class="px-4 py-2 rounded-lg font-semibold">East Midlands (EMA)</button>
+    <button onclick="fetchWeather('VHHH', 'Hong Kong (HKG)')" class="px-4 py-2 rounded-lg font-semibold">Hong Kong (HKG)</button>
+    <button onclick="fetchWeather('DNMM', 'Lagos (LOS)')" class="px-4 py-2 rounded-lg font-semibold">Lagos (LOS)</button>
+    <button onclick="fetchWeather('EDDP', 'Leipzig (LEJ)')" class="px-4 py-2 rounded-lg font-semibold">Leipzig (LEJ)</button>
+    <button onclick="fetchWeather('LOWL', 'Linz (LNZ)')" class="px-4 py-2 rounded-lg font-semibold">Linz (LNZ)</button>
+    <button onclick="fetchWeather('EGLL', 'London Heathrow (LHR)')" class="px-4 py-2 rounded-lg font-semibold">London Heathrow (LHR)</button>
+    <button onclick="fetchWeather('EGGW', 'Luton (LTN)')" class="px-4 py-2 rounded-lg font-semibold">Luton (LTN)</button>
+    <button onclick="fetchWeather('LFLL', 'Lyon (LYS)')" class="px-4 py-2 rounded-lg font-semibold">Lyon (LYS)</button>
+    <button onclick="fetchWeather('LEMD', 'Madrid (MAD)')" class="px-4 py-2 rounded-lg font-semibold">Madrid (MAD)</button>
+    <button onclick="fetchWeather('LFML', 'Marseille (MRS)')" class="px-4 py-2 rounded-lg font-semibold">Marseille (MRS)</button>
+    <button onclick="fetchWeather('LIMC', 'Milan Malpensa (MXP)')" class="px-4 py-2 rounded-lg font-semibold">Milan Malpensa (MXP)</button>
+    <button onclick="fetchWeather('LFPG', 'Paris CDG (CDG)')" class="px-4 py-2 rounded-lg font-semibold">Paris CDG (CDG)</button>
+    <button onclick="fetchWeather('LPPR', 'Porto (OPO)')" class="px-4 py-2 rounded-lg font-semibold">Porto (OPO)</button>
+    <button onclick="fetchWeather('OERK', 'Riyadh (RUH)')" class="px-4 py-2 rounded-lg font-semibold">Riyadh (RUH)</button>
+    <button onclick="fetchWeather('ZSPD', 'Shanghai (PVG)')" class="px-4 py-2 rounded-lg font-semibold">Shanghai (PVG)</button>
+    <button onclick="fetchWeather('ZGSZ', 'Shenzhen (SZX)')" class="px-4 py-2 rounded-lg font-semibold">Shenzhen (SZX)</button>
+    <button onclick="fetchWeather('LLBG', 'Tel Aviv (TLV)')" class="px-4 py-2 rounded-lg font-semibold">Tel Aviv (TLV)</button>
+    <button onclick="fetchWeather('LFBO', 'Toulouse (TLS)')" class="px-4 py-2 rounded-lg font-semibold">Toulouse (TLS)</button>
     <button onclick="fetchWeather('LEVT', 'Vitoria (VIT)')" class="px-4 py-2 rounded-lg font-semibold">Vitoria (VIT)</button>
   </div>
   <div id="weather-data" class="w-full max-w-2xl p-6 rounded-lg shadow-lg mt-6">
@@ -166,18 +192,16 @@
     const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 
     function escapeRegExp(str) {
-      return str.replace(/[.*+?^${}()|[\]\]/g, '\$&');
+      return str.replace(/[.*+?^${}()|[\]\]/g, '\\$&');
     }
-    
+
     function decodeWeather(wxString) {
       if (!wxString) return 'none';
-      // updated regex to capture codes with numbers like PROB30, PROB40
-      const codes = wxString.match(/[+-]?[A-Z0-9]{2,6}/g) || [];
+      const codes = wxString.match(/[+-]?[A-Z]{2,4}/g) || [];
       return codes.map(code => weatherTranslations[code] || code).join(', ');
     }
 
-    function highlightText(text, conditions, className) {
-      // Conditions NOT to highlight
+    function highlightText(text, conditions, defaultClass) {
       const ignoreList = [
         'rain',
         'light rain',
@@ -195,8 +219,11 @@
       
       let highlighted = text;
       conditions.forEach(condition => {
-        if (ignoreList.includes(condition.toLowerCase())) return; // skip excluded
+        if (ignoreList.includes(condition.toLowerCase())) return;
         const regex = new RegExp(`\\b${escapeRegExp(condition)}\\b`, 'gi');
+        const lowerCondition = condition.toLowerCase();
+        const orangeWords = ['mist', 'shallow mist', 'partial mist'];
+        const className = orangeWords.includes(lowerCondition) ? 'highlight-orange' : defaultClass;
         highlighted = highlighted.replace(regex, `<span class="${className}">${condition}</span>`);
       });
       return highlighted;
