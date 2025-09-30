@@ -168,7 +168,7 @@
     function escapeRegExp(str) {
       return str.replace(/[.*+?^${}()|[\]\]/g, '\$&');
     }
-
+    
     function decodeWeather(wxString) {
       if (!wxString) return 'none';
       // updated regex to capture codes with numbers like PROB30, PROB40
