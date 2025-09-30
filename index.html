@@ -192,7 +192,7 @@
     const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 
     function escapeRegExp(str) {
-      return str.replace(/[.*+?^${}()|[\]\]/g, '\\$&');
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
     function decodeWeather(wxString) {
@@ -263,8 +263,9 @@
       weatherDiv.innerHTML = '<p>Loading...</p>';
 
       try {
-        // Fetch METAR
+        // Fetch METAR using updated 2025 AviationWeather API endpoint
         const metarResponse = await fetch(`https://aviationweather.gov/api/data/metar?ids=${icao}&format=xml`);
+        if (!metarResponse.ok) throw new Error(`METAR fetch failed: ${metarResponse.status}`);
         const metarText = await metarResponse.text();
         const metarParser = new DOMParser();
         const metarXml = metarParser.parseFromString(metarText, 'text/xml');
@@ -345,8 +346,9 @@
           `;
         }
 
-        // Fetch TAF
+        // Fetch TAF using updated 2025 AviationWeather API endpoint
         const tafResponse = await fetch(`https://aviationweather.gov/api/data/taf?ids=${icao}&format=xml`);
+        if (!tafResponse.ok) throw new Error(`TAF fetch failed: ${tafResponse.status}`);
         const tafText = await tafResponse.text();
         const tafParser = new DOMParser();
         const tafXml = tafParser.parseFromString(tafText, 'text/xml');
