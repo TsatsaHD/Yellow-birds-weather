@@ -197,7 +197,7 @@
 
     function decodeWeather(wxString) {
       if (!wxString) return 'none';
-      const codes = wxString.match(/[+-]?[A-Z]{2,4}/g) || [];
+      const codes = wxString.match(/[+-]?[A-Z]{2,6}/g) || [];
       return codes.map(code => weatherTranslations[code] || code).join(', ');
     }
 
