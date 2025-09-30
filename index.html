@@ -192,7 +192,7 @@
     const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 
     function escapeRegExp(str) {
-      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return str.replace(/[.*+?^${}()|[\]\]/g, '\\$&');
     }
 
     function decodeWeather(wxString) {
@@ -201,8 +201,7 @@
       return codes.map(code => weatherTranslations[code] || code).join(', ');
     }
 
-    function highlightText(text, conditions, className) {
-      // Conditions NOT to highlight
+    function highlightText(text, conditions, defaultClass) {
       const ignoreList = [
         'rain',
         'light rain',
@@ -220,8 +219,11 @@
       
       let highlighted = text;
       conditions.forEach(condition => {
-        if (ignoreList.includes(condition.toLowerCase())) return; // skip excluded
+        if (ignoreList.includes(condition.toLowerCase())) return;
         const regex = new RegExp(`\\b${escapeRegExp(condition)}\\b`, 'gi');
+        const lowerCondition = condition.toLowerCase();
+        const orangeWords = ['mist', 'shallow mist', 'partial mist'];
+        const className = orangeWords.includes(lowerCondition) ? 'highlight-orange' : defaultClass;
         highlighted = highlighted.replace(regex, `<span class="${className}">${condition}</span>`);
       });
       return highlighted;
