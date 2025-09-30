@@ -411,7 +411,7 @@ const codes = wxString.match(/PROB(?:30|40)|[+-]?[A-Z]{2,4}/g) || [];
               
             if (windGust) {
               const gustSpeed = parseInt(windGust);
-              if (gustSpeed >= 36) wind += `, gusts <span class="highlight-red">${gustSpeed} kt</span>`;
+              if (gustSpeed >= 30) wind += `, gusts <span class="highlight-red">${gustSpeed} kt</span>`;
               else if (gustSpeed >= 25) wind += `, gusts <span class="highlight-orange">${gustSpeed} kt</span>`;
             }
               
