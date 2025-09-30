@@ -187,7 +187,6 @@
       '-TSGR': 'thunderstorm with light hail',
       '+TSGR': 'thunderstorm with heavy hail',
       'TSGR': 'thunderstorm with hail',
-
     };
 
     const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
@@ -203,8 +202,21 @@
     }
 
     function highlightText(text, conditions, className) {
+      // Conditions NOT to highlight
+      const ignoreList = [
+        'rain',
+        'light rain',
+        'heavy rain',
+        'drizzle',
+        'light drizzle',
+        'heavy drizzle',
+        'no significant weather',
+        'no significant change expected'
+      ];
+      
       let highlighted = text;
       conditions.forEach(condition => {
+        if (ignoreList.includes(condition.toLowerCase())) return; // skip excluded
         const regex = new RegExp(`\\b${escapeRegExp(condition)}\\b`, 'gi');
         highlighted = highlighted.replace(regex, `<span class="${className}">${condition}</span>`);
       });
@@ -419,7 +431,7 @@
           <h3 class="font-semibold">Decoded METAR</h3>
           <p>${metarDecoded.trim()}</p>
 
-          <br><br>
+          <br>
 
           <h3 class="font-semibold mt-4">Decoded TAF</h3>
           <p>${tafDecoded.trim()}</p>
