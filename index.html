@@ -201,38 +201,31 @@ const codes = wxString.match(/PROB(?:30|40)|[+-]?[A-Z]{2,4}/g) || [];
       return codes.map(code => weatherTranslations[code] || code).join(', ');
     }
 
-    function highlightText(text) {
-  const orangeList = ['mist', 'shallow mist', 'partial mist']; 
-  const ignoreList = [
-    'rain',
-    'light rain',
-    'heavy rain',
-    'rain showers',
-    'light rain showers',
-    'heavy rain showers',
-    'drizzle',
-    'light drizzle',
-    'heavy drizzle',
-    'light ',
-    'no significant weather',
-    'no significant change expected'
-  ];
-
-  let highlighted = text;
-
-  Object.values(weatherTranslations).forEach(condition => {
-    if (!condition) return;
-    const regex = new RegExp(`\\b${escapeRegExp(condition)}\\b`, 'gi');
-
-    if (orangeList.includes(condition.toLowerCase())) {
-      highlighted = highlighted.replace(regex, `<span class="highlight-orange">${condition}</span>`);
-    } else if (!ignoreList.includes(condition.toLowerCase())) {
-      highlighted = highlighted.replace(regex, `<span class="highlight-red">${condition}</span>`);
+    function highlightText(text, conditions, className) {
+      // Conditions NOT to highlight
+      const ignoreList = [
+        'rain',
+        'light rain',
+        'heavy rain',
+        'rain showers',
+        'light rain showers',
+        'heavy rain showers',
+        'drizzle',
+        'light drizzle',
+        'heavy drizzle',
+        'light ',
+        'no significant weather',
+        'no significant change expected'
+      ];
+      
+      let highlighted = text;
+      conditions.forEach(condition => {
+        if (ignoreList.includes(condition.toLowerCase())) return; // skip excluded
+        const regex = new RegExp(`\\b${escapeRegExp(condition)}\\b`, 'gi');
+        highlighted = highlighted.replace(regex, `<span class="${className}">${condition}</span>`);
+      });
+      return highlighted;
     }
-  });
-
-  return highlighted;
-}
 
     function decodeCloudCover(cover) {
       switch (cover) {
@@ -411,7 +404,7 @@ const codes = wxString.match(/PROB(?:30|40)|[+-]?[A-Z]{2,4}/g) || [];
               
             if (windGust) {
               const gustSpeed = parseInt(windGust);
-              if (gustSpeed >= 30) wind += `, gusts <span class="highlight-red">${gustSpeed} kt</span>`;
+              if (gustSpeed >= 36) wind += `, gusts <span class="highlight-red">${gustSpeed} kt</span>`;
               else if (gustSpeed >= 25) wind += `, gusts <span class="highlight-orange">${gustSpeed} kt</span>`;
             }
               
