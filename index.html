@@ -3,65 +3,41 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DHL Airport Weather — METAR & TAF</title>
+  <title>Airport Weather — METAR &amp; TAF</title>
 
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    /* DHL-inspired palette */
     :root{
-      --dhl-red: #d40511;
-      --dhl-red-dark: #b0040e;
-      --dhl-yellow: #ffc107;
-      --panel-bg: rgba(255,255,255,0.95);
-      --muted: #333;
+      --brand-red: #d40511;
+      --brand-red-dark: #b0040e;
+      --brand-yellow: #ffc107;
+      --panel-bg: rgba(255,255,255,0.98);
+      --muted: #4b5563;
     }
-
     html,body { height:100%; }
     body{
-      background: linear-gradient(180deg, var(--dhl-yellow), #fff3cf 60%);
-      color: var(--dhl-red);
+      background: linear-gradient(180deg, var(--brand-yellow), #fff6d6 60%);
+      color: var(--brand-red);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
-
-    header {
-      border-bottom: 4px solid rgba(0,0,0,0.06);
-      width:100%;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.04);
-    }
-
-    /* button visuals */
+    header{ width:100%; }
     .airport-btn{
-      background: var(--dhl-red);
-      color: var(--dhl-yellow);
+      background: var(--brand-red);
+      color: var(--brand-yellow);
       border-radius: 0.5rem;
+      transition: transform .06s ease, background-color .12s ease;
+      white-space: normal;
     }
-    .airport-btn:hover{ background: var(--dhl-red-dark); }
-
-    /* highlights (kept same semantics) */
-    .highlight-red {
-      background-color: var(--dhl-red);
-      color: #fff;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-weight:600;
-    }
-    .highlight-orange {
-      background-color: #f28c38;
-      color: #fff;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-weight:600;
-    }
-
-    /* small utility */
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace; }
-    .card { background: var(--panel-bg); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
-    .muted { color: var(--muted); }
-
-    /* responsive grid tweak */
-    @media (max-width:640px){
+    .airport-btn:hover{ background: var(--brand-red-dark); transform: translateY(-2px); }
+    .card{ background: var(--panel-bg); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+    .mono{ font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; }
+    .muted{ color: var(--muted); }
+    .highlight-red { background-color: var(--brand-red); color: #fff; padding: 2px 6px; border-radius: 3px; font-weight:700; }
+    .highlight-orange { background-color: #f28c38; color: #fff; padding: 2px 6px; border-radius: 3px; font-weight:700; }
+    /* responsive grid */
+    @media (max-width: 640px){
       .airport-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap:0.5rem; }
     }
   </style>
@@ -73,31 +49,30 @@
       <div class="flex items-center gap-4">
         <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-[#ffd24a] to-[#ffb300] flex items-center justify-center shadow-sm">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path d="M2 12h20M12 2v20" stroke="#d40511" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12h20M12 2v20" stroke="var(--brand-red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
         <div>
-          <h1 class="text-2xl font-extrabold" style="color:var(--dhl-red)">DHL — Airport Weather</h1>
-          <div class="text-sm muted">METAR & TAF (decoded) — Public data from aviationweather.gov</div>
+          <h1 class="text-2xl font-extrabold" style="color:var(--brand-red)">Airport Weather</h1>
+          <div class="text-sm muted">Decoded METAR &amp; TAF (interactive)</div>
         </div>
       </div>
 
-      <div class="text-sm mono muted">No API key required</div>
+      <div class="text-sm mono muted">Live METAR & TAF</div>
     </div>
   </header>
 
   <main class="w-full max-w-6xl flex-1 flex gap-6 flex-col lg:flex-row">
-    <!-- Left: Grid of airport buttons -->
+    <!-- Left: Buttons -->
     <section class="lg:w-2/5">
       <div class="card p-4">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-semibold" style="color:var(--dhl-red)">Select airport</h2>
-          <div class="text-xs muted">Click a station to load METAR & TAF</div>
+          <h2 class="text-lg font-semibold" style="color:var(--brand-red)">Airports</h2>
+          <div class="text-xs muted">Click to load METAR &amp; TAF</div>
         </div>
 
-        <div class="airport-grid grid grid-cols-3 gap-3">
-          <!-- Buttons generated from array in script; kept here for accessibility/fallback -->
-          <!-- The script will populate these buttons dynamically too -->
+        <div id="airport-grid" class="airport-grid grid grid-cols-3 gap-3" role="list" aria-label="Airport list">
+          <!-- Buttons generated by script -->
         </div>
 
         <div class="mt-4 flex gap-3">
@@ -113,8 +88,8 @@
       <div id="weather-panel" class="card p-6 min-h-[320px]">
         <div id="panel-header" class="flex items-start justify-between gap-4 mb-4">
           <div>
-            <h3 id="airport-title" class="text-xl font-bold" style="color:var(--dhl-red)">Select an airport</h3>
-            <div id="observ-time" class="text-sm muted">Decoded METAR & TAF will appear here.</div>
+            <h3 id="airport-title" class="text-xl font-bold" style="color:var(--brand-red)">Select an airport</h3>
+            <div id="observ-time" class="text-sm muted">Decoded METAR &amp; TAF will appear here.</div>
           </div>
           <div class="text-right text-sm muted">
             <div id="status">Idle</div>
@@ -131,11 +106,13 @@
   </main>
 
   <footer class="w-full max-w-6xl mt-6">
-    <div class="text-xs muted text-center">Data provided by aviationweather.gov — METAR & TAF JSON endpoints.</div>
+    <div class="text-xs muted text-center">Interface for METAR &amp; TAF decoding and highlighting.</div>
   </footer>
 
   <script>
-    /* ========= Airports list (same as original) ========= */
+    /* --------------------------
+       Airports (same set as original)
+       -------------------------- */
     const AIRPORTS = [
       ['EHAM','Amsterdam (AMS)'],
       ['OBBI','Bahrain (BAH)'],
@@ -171,7 +148,9 @@
       ['LEVT','Vitoria (VIT)']
     ];
 
-    /* ========= Translations & helpers (kept/expanded from original) ========= */
+    /* --------------------------
+       Translations & helpers (from your original)
+       -------------------------- */
     const weatherTranslations = {
       'BR': 'mist','TS': 'thunderstorm','FG': 'fog','HZ': 'haze','FU': 'smoke','FZ': 'freezing',
       'VA': 'volcanic ash','DU': 'widespread dust','SQ': 'squall','FC': 'funnel cloud','PO': 'dust devils',
@@ -183,7 +162,7 @@
       'PRBR': 'partial mist','DRDU': 'drifting dust','DRSA': 'drifting sand','BLDU': 'blowing dust',
       'BLSA': 'blowing sand','BECMG': 'becoming','TEMPO': 'temporary fluctuations',
       'PROB30': '30% chance','PROB40': '40% chance','NOSIG': 'no significant change expected',
-      'FZRA': 'freezing rain','RA':'rain','DZ':'drizzle','SN':'snow','SG':'snow grains','IC':'ice crystals',
+      'RA':'rain','DZ':'drizzle','SN':'snow','SG':'snow grains','IC':'ice crystals',
       'PL':'ice pellets','GR':'hail','GS':'small hail or snow pellets','UP':'unknown precipitation',
       'SHRA':'rain showers','SHSN':'snow showers','TSRA':'thunderstorm with rain','TSGR':'thunderstorm with hail'
     };
@@ -191,10 +170,10 @@
     const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
     function escapeRegExp(str){ return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; }); }
 
     function decodeWeather(wxString){
       if(!wxString) return 'none';
-      // capture PROB30/40 and groups like -RA, +TSRA, BC...
       const codes = wxString.match(/PROB(?:30|40)|[+-]?[A-Z]{2,4}/g) || [];
       return codes.map(code => weatherTranslations[code] || code).join(', ');
     }
@@ -227,7 +206,7 @@
       return new Date(isoTime) < new Date();
     }
 
-    /* Highlighting logic — preserves original heuristics */
+    /* Highlighting logic — preserve original heuristics */
     function highlightText(htmlText){
       const orangeList = ['mist','shallow mist','partial mist'];
       const ignoreList = [
@@ -237,7 +216,6 @@
       ];
 
       let highlighted = htmlText;
-
       const uniqueConditions = Array.from(new Set(Object.values(weatherTranslations).filter(Boolean)));
       uniqueConditions.forEach(condition => {
         const condLower = condition.toLowerCase();
@@ -253,8 +231,10 @@
       return highlighted;
     }
 
-    /* ========= DOM references & state ========= */
-    const grid = document.querySelector('.airport-grid');
+    /* --------------------------
+       DOM refs & state
+       -------------------------- */
+    const grid = document.getElementById('airport-grid');
     const weatherContent = document.getElementById('weather-content');
     const airportTitle = document.getElementById('airport-title');
     const observTime = document.getElementById('observ-time');
@@ -267,21 +247,20 @@
     let lastStation = null;
     let lastData = null;
 
-    /* Populate airport buttons dynamically for easy maintenance */
+    /* Build buttons (ensures every airport is clickable) */
     function buildButtons(){
       AIRPORTS.forEach(([icao,label])=>{
         const btn = document.createElement('button');
         btn.className = 'airport-btn px-3 py-2 text-sm font-semibold';
-        btn.innerHTML = `${label} <span class="mono text-xs ml-2">(${icao})</span>`;
+        btn.setAttribute('role','listitem');
+        btn.innerHTML = `${escapeHtml(label)} <span class="mono text-xs ml-2">(${icao})</span>`;
         btn.title = `${label} — ${icao}`;
         btn.addEventListener('click', ()=> fetchWeather(icao,label));
         grid.appendChild(btn);
       });
     }
-
     buildButtons();
 
-    /* Clear / refresh controls */
     clearBtn.addEventListener('click', ()=>{
       weatherContent.innerHTML = '<p class="muted">Cleared. Select an airport to load data.</p>';
       airportTitle.textContent = 'Select an airport';
@@ -297,22 +276,29 @@
       if(lastStation) fetchWeather(lastStation[0], lastStation[1], {force:true});
       else {
         statusEl.textContent = 'Nothing to refresh';
-        setTimeout(()=> statusEl.textContent = 'Idle', 1500);
+        setTimeout(()=> statusEl.textContent = 'Idle', 1400);
       }
     });
 
-    /* ========= Fetching METAR & TAF ======== */
-    // aviationweather.gov provides endpoints under /api/data/metar and /api/data/taf
-    // We'll request format=json & ids=<ICAO>
+    /* ------------- Fetching helpers ------------- */
     async function fetchJSON(url){
-      const resp = await fetch(url, { headers: { 'User-Agent': 'AirportWeatherDHL/1.0' } });
+      const resp = await fetch(url, { headers: { 'User-Agent': 'AirportWeatherWidget/1.0' } });
       if(!resp.ok){
-        const text = await resp.text().catch(()=> '');
-        throw new Error(`HTTP ${resp.status} ${resp.statusText} ${text ? '- ' + text : ''}`);
+        const txt = await resp.text().catch(()=> '');
+        throw new Error(`HTTP ${resp.status} ${resp.statusText} ${txt ? '- ' + txt : ''}`);
       }
       return resp.json();
     }
 
+    function extractWxFromRaw(raw){
+      if(!raw) return '';
+      const matches = raw.match(/PROB(?:30|40)|[+-]?[A-Z]{2,4}/g) || [];
+      return matches.join(' ');
+    }
+
+    /* --------------------------
+       Core: fetch METAR & TAF, decode, highlight
+       -------------------------- */
     async function fetchWeather(icao, airportName, opts={force:false}){
       airportTitle.textContent = `${airportName} (${icao})`;
       observTime.textContent = 'Loading METAR & TAF...';
@@ -321,18 +307,14 @@
       weatherContent.innerHTML = `<p class="muted">Loading data for ${icao}...</p>`;
 
       try {
-        // METAR
         const metarUrl = `https://aviationweather.gov/api/data/metar?ids=${icao}&format=json`;
         const tafUrl = `https://aviationweather.gov/api/data/taf?ids=${icao}&format=json`;
 
-        // Kick both requests concurrently
-        const [metarRaw, tafRaw] = await Promise.allSettled([fetchJSON(metarUrl), fetchJSON(tafUrl)]);
+        const [metarRes, tafRes] = await Promise.allSettled([fetchJSON(metarUrl), fetchJSON(tafUrl)]);
 
         let metarDecoded = 'No METAR data available';
-        if(metarRaw.status === 'fulfilled' && Array.isArray(metarRaw.value) && metarRaw.value.length > 0){
-          const m = metarRaw.value[0];
-          // detect fields from the JSON returned by aviationweather.gov
-          // their property names are commonly 'rawText', 'reportTime', 'temp', etc.
+        if(metarRes.status === 'fulfilled' && Array.isArray(metarRes.value) && metarRes.value.length > 0){
+          const m = metarRes.value[0];
           const observationTime = m.reportTime ? formatTime(m.reportTime) : (m.observed ? formatTime(m.observed) : 'Unknown');
           const wind = (m.wspd !== null && m.wspd !== undefined) ? `${m.wspd}` : 'calm';
           const windDir = (m.wdir !== null && m.wdir !== undefined) ? `${m.wdir}°` : 'variable direction';
@@ -354,31 +336,32 @@
               return `${cover}${base}`;
             }).join(', ');
           } else if (m.rawText && /(FEW|SCT|BKN|OVC|CAVOK)/.test(m.rawText)){
-            clouds = m.rawText.match(/(FEW|SCT|BKN|OVC|CAVOK)[0] || 'see raw';
+            const match = m.rawText.match(/(FEW|SCT|BKN|OVC|CAVOK)/);
+            clouds = match ? match[0] : 'see raw';
           }
 
           metarDecoded = `<div>
-            <div class="text-sm muted mono">Observation: ${observationTime}</div>
-            <div class="mt-2"><strong>Wind:</strong> ${windDir} at ${wind} kt${windGust}</div>
-            <div><strong>Visibility:</strong> ${visibility} SM (${visibilityKm} km)</div>
-            <div><strong>Weather:</strong> ${weather}</div>
-            <div><strong>Clouds:</strong> ${clouds}</div>
-            <div><strong>Temperature:</strong> ${temp}°C · <strong>Dewpoint:</strong> ${dew}°C</div>
-            <div><strong>Pressure:</strong> ${pressureInHg} inHg (${pressureHpa} hPa)</div>
+            <div class="text-sm muted mono">Observation: ${escapeHtml(observationTime)}</div>
+            <div class="mt-2"><strong>Wind:</strong> ${escapeHtml(windDir)} at ${escapeHtml(wind)} kt${escapeHtml(windGust)}</div>
+            <div><strong>Visibility:</strong> ${escapeHtml(String(visibility))} SM (${escapeHtml(visibilityKm)} km)</div>
+            <div><strong>Weather:</strong> ${escapeHtml(weather)}</div>
+            <div><strong>Clouds:</strong> ${escapeHtml(clouds)}</div>
+            <div><strong>Temperature:</strong> ${escapeHtml(String(temp))}°C · <strong>Dewpoint:</strong> ${escapeHtml(String(dew))}°C</div>
+            <div><strong>Pressure:</strong> ${escapeHtml(String(pressureInHg))} inHg (${escapeHtml(String(pressureHpa))} hPa)</div>
           </div>`;
         } else {
-          metarDecoded = `<div class="muted">No METAR returned for ${icao}.</div>`;
+          metarDecoded = `<div class="muted">No METAR returned for ${escapeHtml(icao)}.</div>`;
         }
 
         // TAF
         let tafDecoded = 'No TAF data available';
-        if(tafRaw.status === 'fulfilled' && Array.isArray(tafRaw.value) && tafRaw.value.length > 0){
-          const t = tafRaw.value[0];
+        if(tafRes.status === 'fulfilled' && Array.isArray(tafRes.value) && tafRes.value.length > 0){
+          const t = tafRes.value[0];
           const issueTime = t.issueTime ? formatTime(t.issueTime) : 'Unknown';
           const validFrom = t.validTimeFrom ? formatTime(t.validTimeFrom) : 'Unknown';
           const validTo = t.validTimeTo ? formatTime(t.validTimeTo) : 'Unknown';
-          let forecastHtml = `<div class="mt-4"><div class="text-sm muted mono">TAF issued: ${issueTime}</div>
-            <div class="mt-2"><strong>Valid:</strong> ${validFrom} — ${validTo}</div>`;
+          let forecastHtml = `<div class="mt-4"><div class="text-sm muted mono">TAF issued: ${escapeHtml(issueTime)}</div>
+            <div class="mt-2"><strong>Valid:</strong> ${escapeHtml(validFrom)} — ${escapeHtml(validTo)}</div>`;
 
           if(Array.isArray(t.fcsts) && t.fcsts.length > 0){
             t.fcsts.forEach(fcst => {
@@ -409,11 +392,11 @@
 
               const changeText = changeIndicator ? (weatherTranslations[changeIndicator] || changeIndicator) + ' ' : '';
               forecastHtml += `<div style="${timeStyle} margin-top:0.5rem; padding:0.5rem 0;">
-                <div><strong>${prob}${changeText}${fcstFrom} to ${fcstTo}${timeBecoming}</strong></div>
-                <div>Wind: ${fWindDir} at ${fWind} kt${fWindGust}</div>
-                <div>Visibility: ${fVis} SM (${fVisKm} km)</div>
-                <div>Weather: ${fWeather}</div>
-                <div>Clouds: ${fClouds}</div>
+                <div><strong>${escapeHtml(prob)}${escapeHtml(changeText)}${escapeHtml(fcstFrom)} to ${escapeHtml(fcstTo)}${escapeHtml(timeBecoming)}</strong></div>
+                <div>Wind: ${escapeHtml(fWindDir)} at ${escapeHtml(fWind)} kt${escapeHtml(fWindGust)}</div>
+                <div>Visibility: ${escapeHtml(String(fVis))} SM (${escapeHtml(fVisKm)} km)</div>
+                <div>Weather: ${escapeHtml(fWeather)}</div>
+                <div>Clouds: ${escapeHtml(fClouds)}</div>
               </div>`;
             });
           } else if (t.rawText) {
@@ -423,10 +406,10 @@
           forecastHtml += '</div>';
           tafDecoded = forecastHtml;
         } else {
-          tafDecoded = `<div class="muted">No TAF returned for ${icao}.</div>`;
+          tafDecoded = `<div class="muted">No TAF returned for ${escapeHtml(icao)}.</div>`;
         }
 
-        // Combine, highlight, and render
+        // Combine & highlight
         const combined = `<div>${metarDecoded}<hr class="my-3" /><div>${tafDecoded}</div></div>`;
         const highlighted = highlightText(combined);
 
@@ -436,7 +419,7 @@
         updatedEl.textContent = `Updated: ${new Date().toISOString()}`;
 
         lastStation = [icao, airportName];
-        lastData = { metarRaw, tafRaw, rendered: highlighted, fetchedAt: new Date().toISOString() };
+        lastData = { metarRes, tafRes, rendered: highlighted, fetchedAt: new Date().toISOString() };
         lastLoadedEl.textContent = `${icao}`;
 
       } catch (err) {
@@ -447,23 +430,7 @@
       }
     }
 
-    /* Small helpers for robustness */
-    function escapeHtml(s){
-      if(!s) return '';
-      return String(s).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; });
-    }
-
-    function extractWxFromRaw(raw){
-      // crude attempt to find WX groups like -RA +TSRA BR etc.
-      if(!raw) return '';
-      const matches = raw.match(/(\+|-)?[A-Z]{2,4}|PROB(?:30|40)/g) || [];
-      return matches.join(' ');
-    }
-
-    /* Prevent accidental XSS by not allowing user-supplied HTML except our highlights (we only add small spans) */
-    // note: combined content is generated from decoded values and small parts of rawText; we escape rawText when used.
-
-    /* End of script */
+    /* ------------- End script ------------- */
   </script>
 </body>
 </html>
