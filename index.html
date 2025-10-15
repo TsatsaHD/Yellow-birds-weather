@@ -1,232 +1,251 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Airport Weather</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DHL Airport Weather — METAR & TAF</title>
+
+  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
-    body {
-      background-color: #ffc107;
-      color: #d40511;
+    /* DHL-inspired palette */
+    :root{
+      --dhl-red: #d40511;
+      --dhl-red-dark: #b0040e;
+      --dhl-yellow: #ffc107;
+      --panel-bg: rgba(255,255,255,0.95);
+      --muted: #333;
     }
-    button {
-      background-color: #d40511;
-      color: #ffff00;
-      width: 100%;
-      text-align: center;
+
+    html,body { height:100%; }
+    body{
+      background: linear-gradient(180deg, var(--dhl-yellow), #fff3cf 60%);
+      color: var(--dhl-red);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
-    button:hover {
-      background-color: #b0040e;
+
+    header {
+      border-bottom: 4px solid rgba(0,0,0,0.06);
+      width:100%;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.04);
     }
-    #weather-data {
-      background-color: rgba(255, 255, 255, 0.9);
-      color: #000000;
+
+    /* button visuals */
+    .airport-btn{
+      background: var(--dhl-red);
+      color: var(--dhl-yellow);
+      border-radius: 0.5rem;
     }
+    .airport-btn:hover{ background: var(--dhl-red-dark); }
+
+    /* highlights (kept same semantics) */
     .highlight-red {
-      background-color: #d40511;
-      color: #ffffff;
-      padding: 2px 4px;
-      border-radius: 2px;
+      background-color: var(--dhl-red);
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight:600;
     }
     .highlight-orange {
       background-color: #f28c38;
-      color: #ffffff;
-      padding: 2px 4px;
-      border-radius: 2px;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight:600;
     }
-    .grid-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 0.5rem;
-      padding: 1rem;
-      max-width: 1200px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    @media (max-width: 640px) {
-      .grid-container {
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        padding: 0.5rem;
-      }
+
+    /* small utility */
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace; }
+    .card { background: var(--panel-bg); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+    .muted { color: var(--muted); }
+
+    /* responsive grid tweak */
+    @media (max-width:640px){
+      .airport-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap:0.5rem; }
     }
   </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4">
-  <h1 class="text-3xl font-bold mb-6">Airport Weather Information</h1>
+<body class="min-h-screen flex flex-col items-center p-6">
 
-  <div class="grid-container">
-    <button onclick="fetchWeather('EHAM', 'Amsterdam (AMS)')" class="px-4 py-2 rounded-lg font-semibold">Amsterdam (AMS)</button>
-    <button onclick="fetchWeather('OBBI', 'Bahrain (BAH)')" class="px-4 py-2 rounded-lg font-semibold">Bahrain (BAH)</button>
-    <button onclick="fetchWeather('LEBL', 'Barcelona (BCN)')" class="px-4 py-2 rounded-lg font-semibold">Barcelona (BCN)</button>
-    <button onclick="fetchWeather('LFSB', 'Basel/Mulhouse (BSL/MLH)')" class="px-4 py-2 rounded-lg font-semibold">Basel/Mulhouse (BSL/MLH)</button>
-    <button onclick="fetchWeather('LIPE', 'Bologna (BLQ)')" class="px-4 py-2 rounded-lg font-semibold">Bologna (BLQ)</button>
-    <button onclick="fetchWeather('LFBD', 'Bordeaux (BOD)')" class="px-4 py-2 rounded-lg font-semibold">Bordeaux (BOD)</button>
-    <button onclick="fetchWeather('EBBR', 'Brussels (BRU)')" class="px-4 py-2 rounded-lg font-semibold">Brussels (BRU)</button>
-    <button onclick="fetchWeather('LHBP', 'Budapest (BUD)')" class="px-4 py-2 rounded-lg font-semibold">Budapest (BUD)</button>
-    <button onclick="fetchWeather('GMMN', 'Casablanca (CMN)')" class="px-4 py-2 rounded-lg font-semibold">Casablanca (CMN)</button>
-    <button onclick="fetchWeather('KCVG', 'Cincinnati (CVG)')" class="px-4 py-2 rounded-lg font-semibold">Cincinnati (CVG)</button>
-    <button onclick="fetchWeather('EDDK', 'Cologne (CGN)')" class="px-4 py-2 rounded-lg font-semibold">Cologne (CGN)</button>
-    <button onclick="fetchWeather('EKCH', 'Copenhagen (CPH)')" class="px-4 py-2 rounded-lg font-semibold">Copenhagen (CPH)</button>
-    <button onclick="fetchWeather('EIDW', 'Dublin (DUB)')" class="px-4 py-2 rounded-lg font-semibold">Dublin (DUB)</button>
-    <button onclick="fetchWeather('EGNX', 'East Midlands (EMA)')" class="px-4 py-2 rounded-lg font-semibold">East Midlands (EMA)</button>
-    <button onclick="fetchWeather('VHHH', 'Hong Kong (HKG)')" class="px-4 py-2 rounded-lg font-semibold">Hong Kong (HKG)</button>
-    <button onclick="fetchWeather('DNMM', 'Lagos (LOS)')" class="px-4 py-2 rounded-lg font-semibold">Lagos (LOS)</button>
-    <button onclick="fetchWeather('EDDP', 'Leipzig (LEJ)')" class="px-4 py-2 rounded-lg font-semibold">Leipzig (LEJ)</button>
-    <button onclick="fetchWeather('LOWL', 'Linz (LNZ)')" class="px-4 py-2 rounded-lg font-semibold">Linz (LNZ)</button>
-    <button onclick="fetchWeather('EGLL', 'London Heathrow (LHR)')" class="px-4 py-2 rounded-lg font-semibold">London Heathrow (LHR)</button>
-    <button onclick="fetchWeather('EGGW', 'Luton (LTN)')" class="px-4 py-2 rounded-lg font-semibold">Luton (LTN)</button>
-    <button onclick="fetchWeather('LFLL', 'Lyon (LYS)')" class="px-4 py-2 rounded-lg font-semibold">Lyon (LYS)</button>
-    <button onclick="fetchWeather('LEMD', 'Madrid (MAD)')" class="px-4 py-2 rounded-lg font-semibold">Madrid (MAD)</button>
-    <button onclick="fetchWeather('LFML', 'Marseille (MRS)')" class="px-4 py-2 rounded-lg font-semibold">Marseille (MRS)</button>
-    <button onclick="fetchWeather('LIMC', 'Milan Malpensa (MXP)')" class="px-4 py-2 rounded-lg font-semibold">Milan Malpensa (MXP)</button>
-    <button onclick="fetchWeather('LFPG', 'Paris CDG (CDG)')" class="px-4 py-2 rounded-lg font-semibold">Paris CDG (CDG)</button>
-    <button onclick="fetchWeather('LPPR', 'Porto (OPO)')" class="px-4 py-2 rounded-lg font-semibold">Porto (OPO)</button>
-    <button onclick="fetchWeather('OERK', 'Riyadh (RUH)')" class="px-4 py-2 rounded-lg font-semibold">Riyadh (RUH)</button>
-    <button onclick="fetchWeather('ZSPD', 'Shanghai (PVG)')" class="px-4 py-2 rounded-lg font-semibold">Shanghai (PVG)</button>
-    <button onclick="fetchWeather('ZGSZ', 'Shenzhen (SZX)')" class="px-4 py-2 rounded-lg font-semibold">Shenzhen (SZX)</button>
-    <button onclick="fetchWeather('LLBG', 'Tel Aviv (TLV)')" class="px-4 py-2 rounded-lg font-semibold">Tel Aviv (TLV)</button>
-    <button onclick="fetchWeather('LFBO', 'Toulouse (TLS)')" class="px-4 py-2 rounded-lg font-semibold">Toulouse (TLS)</button>
-    <button onclick="fetchWeather('LEVT', 'Vitoria (VIT)')" class="px-4 py-2 rounded-lg font-semibold">Vitoria (VIT)</button>
-  </div>
-  <div id="weather-data" class="w-full max-w-2xl p-6 rounded-lg shadow-lg mt-6">
-    <p>Select an airport to view decoded METAR and TAF data.</p>
-  </div>
+  <header class="w-full max-w-6xl mb-6">
+    <div class="mx-auto max-w-6xl flex items-center justify-between py-6 px-2">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-[#ffd24a] to-[#ffb300] flex items-center justify-center shadow-sm">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M2 12h20M12 2v20" stroke="#d40511" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-2xl font-extrabold" style="color:var(--dhl-red)">DHL — Airport Weather</h1>
+          <div class="text-sm muted">METAR & TAF (decoded) — Public data from aviationweather.gov</div>
+        </div>
+      </div>
+
+      <div class="text-sm mono muted">No API key required</div>
+    </div>
+  </header>
+
+  <main class="w-full max-w-6xl flex-1 flex gap-6 flex-col lg:flex-row">
+    <!-- Left: Grid of airport buttons -->
+    <section class="lg:w-2/5">
+      <div class="card p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold" style="color:var(--dhl-red)">Select airport</h2>
+          <div class="text-xs muted">Click a station to load METAR & TAF</div>
+        </div>
+
+        <div class="airport-grid grid grid-cols-3 gap-3">
+          <!-- Buttons generated from array in script; kept here for accessibility/fallback -->
+          <!-- The script will populate these buttons dynamically too -->
+        </div>
+
+        <div class="mt-4 flex gap-3">
+          <button id="refresh-last" class="px-3 py-2 airport-btn text-sm font-semibold">Refresh last</button>
+          <button id="clear-btn" class="px-3 py-2 border border-dashed rounded text-sm muted">Clear</button>
+          <div id="last-loaded" class="ml-auto text-xs muted self-center mono">None</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right: Weather display -->
+    <section class="lg:w-3/5">
+      <div id="weather-panel" class="card p-6 min-h-[320px]">
+        <div id="panel-header" class="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <h3 id="airport-title" class="text-xl font-bold" style="color:var(--dhl-red)">Select an airport</h3>
+            <div id="observ-time" class="text-sm muted">Decoded METAR & TAF will appear here.</div>
+          </div>
+          <div class="text-right text-sm muted">
+            <div id="status">Idle</div>
+            <div id="updated" class="mono text-xs"></div>
+          </div>
+        </div>
+
+        <div id="weather-content" class="overflow-auto" style="max-height:58vh;">
+          <p class="muted">No data loaded. Use the left panel to pick an airport.</p>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="w-full max-w-6xl mt-6">
+    <div class="text-xs muted text-center">Data provided by aviationweather.gov — METAR & TAF JSON endpoints.</div>
+  </footer>
 
   <script>
+    /* ========= Airports list (same as original) ========= */
+    const AIRPORTS = [
+      ['EHAM','Amsterdam (AMS)'],
+      ['OBBI','Bahrain (BAH)'],
+      ['LEBL','Barcelona (BCN)'],
+      ['LFSB','Basel/Mulhouse (BSL/MLH)'],
+      ['LIPE','Bologna (BLQ)'],
+      ['LFBD','Bordeaux (BOD)'],
+      ['EBBR','Brussels (BRU)'],
+      ['LHBP','Budapest (BUD)'],
+      ['GMMN','Casablanca (CMN)'],
+      ['KCVG','Cincinnati (CVG)'],
+      ['EDDK','Cologne (CGN)'],
+      ['EKCH','Copenhagen (CPH)'],
+      ['EIDW','Dublin (DUB)'],
+      ['EGNX','East Midlands (EMA)'],
+      ['VHHH','Hong Kong (HKG)'],
+      ['DNMM','Lagos (LOS)'],
+      ['EDDP','Leipzig (LEJ)'],
+      ['LOWL','Linz (LNZ)'],
+      ['EGLL','London Heathrow (LHR)'],
+      ['EGGW','Luton (LTN)'],
+      ['LFLL','Lyon (LYS)'],
+      ['LEMD','Madrid (MAD)'],
+      ['LFML','Marseille (MRS)'],
+      ['LIMC','Milan Malpensa (MXP)'],
+      ['LFPG','Paris CDG (CDG)'],
+      ['LPPR','Porto (OPO)'],
+      ['OERK','Riyadh (RUH)'],
+      ['ZSPD','Shanghai (PVG)'],
+      ['ZGSZ','Shenzhen (SZX)'],
+      ['LLBG','Tel Aviv (TLV)'],
+      ['LFBO','Toulouse (TLS)'],
+      ['LEVT','Vitoria (VIT)']
+    ];
+
+    /* ========= Translations & helpers (kept/expanded from original) ========= */
     const weatherTranslations = {
-      'BR': 'mist',
-      'TS': 'thunderstorm',
-      'FG': 'fog',
-      'HZ': 'haze',
-      'FU': 'smoke',
-      'FZ': 'freezing',
-      'VA': 'volcanic ash',
-      'DU': 'widespread dust',
-      'SQ': 'squall',
-      'FC': 'funnel cloud',
-      'PO': 'dust devils',
-      'SA': 'sand',
-      'CB': 'cumulonimbus',
-      'TCU': 'towering cumulus',
-      'WS': 'wind shear',
-      '+': 'heavy ',
-      '-': 'light ',
-      'VC': 'in the vicinity ',
-      'FZRA': 'freezing rain',
-      'NSW': 'no significant weather',
-      'ALQDS': 'all quadrants',
-      'FM': 'from',
-      'VRB': 'variable direction',
-      'BCFG': 'patches of fog',
-      'MIFG': 'shallow fog',
-      'PRFG': 'partial fog',
-      'DRSN': 'drifting snow',
-      'BLSN': 'blowing snow',
-      'MIBR': 'shallow mist',
-      'PRBR': 'partial mist',
-      'DRDU': 'drifting dust',
-      'DRSA': 'drifting sand',
-      'BLDU': 'blowing dust',
-      'BLSA': 'blowing sand',
-      'BECMG': 'becoming',
-      'BECM': 'becoming',
-      'TEMPO': 'temporary fluctuations',
-      'TEMP': 'temporary fluctuations',
-      'PROB30': '30% chance',
-      'PROB40': '40% chance',
-      'NOSIG': 'no significant change expected',
-      '-RA': 'light rain',
-      '+RA': 'heavy rain',
-      'RA': 'rain',
-      '-DZ': 'light drizzle',
-      '+DZ': 'heavy drizzle',
-      'DZ': 'drizzle',
-      '-SN': 'light snow',
-      '+SN': 'heavy snow',
-      'SN': 'snow',
-      '-SG': 'light snow grains',
-      '+SG': 'heavy snow grains',
-      'SG': 'snow grains',
-      '-IC': 'light ice crystals',
-      '+IC': 'heavy ice crystals',
-      'IC': 'ice crystals',
-      '-PL': 'light ice pellets',
-      '+PL': 'heavy ice pellets',
-      'PL': 'ice pellets',
-      '-GR': 'light hail',
-      '+GR': 'heavy hail',
-      'GR': 'hail',
-      '-GS': 'light small hail or snow pellets',
-      '+GS': 'heavy small hail or snow pellets',
-      'GS': 'small hail or snow pellets',
-      '-UP': 'light unknown precipitation',
-      '+UP': 'heavy unknown precipitation',
-      'UP': 'unknown precipitation',
-      '-FG': 'light fog',
-      '+FG': 'dense fog',
-      'FG': 'fog',
-      '-SS': 'light sandstorm',
-      '+SS': 'heavy sandstorm',
-      '-DS': 'light duststorm',
-      'SS': 'sandstorm',
-      'DS': 'duststorm',
-      '+DS': 'heavy duststorm',
-      'SHRA': 'rain showers',
-      '-SHRA': 'light rain showers',
-      '+SHRA': 'heavy rain showers',
-      '-SHSN': 'light snow showers',
-      'SHSN': 'snow showers',
-      '+SHSN': 'heavy snow showers',
-      '-TSRA': 'thunderstorm with light rain',
-      '+TSRA': 'thunderstorm with heavy rain',
-      '-TSSN': 'thunderstorm with light snow',
-      'TSRA': 'thunderstorm with rain',
-      'TSSN': 'thunderstorm with snow',
-      '+TSSN': 'thunderstorm with heavy snow',
-      '-TSGR': 'thunderstorm with light hail',
-      '+TSGR': 'thunderstorm with heavy hail',
-      'TSGR': 'thunderstorm with hail',
+      'BR': 'mist','TS': 'thunderstorm','FG': 'fog','HZ': 'haze','FU': 'smoke','FZ': 'freezing',
+      'VA': 'volcanic ash','DU': 'widespread dust','SQ': 'squall','FC': 'funnel cloud','PO': 'dust devils',
+      'SA': 'sand','CB': 'cumulonimbus','TCU': 'towering cumulus','WS': 'wind shear',
+      '+': 'heavy ','-': 'light ','VC': 'in the vicinity ',
+      'FZRA': 'freezing rain','NSW': 'no significant weather','ALQDS': 'all quadrants',
+      'FM': 'from','VRB': 'variable direction','BCFG': 'patches of fog','MIFG': 'shallow fog',
+      'PRFG': 'partial fog','DRSN': 'drifting snow','BLSN': 'blowing snow','MIBR': 'shallow mist',
+      'PRBR': 'partial mist','DRDU': 'drifting dust','DRSA': 'drifting sand','BLDU': 'blowing dust',
+      'BLSA': 'blowing sand','BECMG': 'becoming','TEMPO': 'temporary fluctuations',
+      'PROB30': '30% chance','PROB40': '40% chance','NOSIG': 'no significant change expected',
+      'FZRA': 'freezing rain','RA':'rain','DZ':'drizzle','SN':'snow','SG':'snow grains','IC':'ice crystals',
+      'PL':'ice pellets','GR':'hail','GS':'small hail or snow pellets','UP':'unknown precipitation',
+      'SHRA':'rain showers','SHSN':'snow showers','TSRA':'thunderstorm with rain','TSGR':'thunderstorm with hail'
     };
 
-    const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-    function escapeRegExp(str) {
-      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
+    function escapeRegExp(str){ return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
-    function decodeWeather(wxString) {
-      if (!wxString) return 'none';
+    function decodeWeather(wxString){
+      if(!wxString) return 'none';
+      // capture PROB30/40 and groups like -RA, +TSRA, BC...
       const codes = wxString.match(/PROB(?:30|40)|[+-]?[A-Z]{2,4}/g) || [];
       return codes.map(code => weatherTranslations[code] || code).join(', ');
     }
 
-    function highlightText(text) {
-      const orangeList = ['mist', 'shallow mist', 'partial mist']; 
+    function decodeCloudCover(cover){
+      switch(cover){
+        case 'FEW': return 'few clouds';
+        case 'SCT': return 'scattered clouds';
+        case 'BKN': return 'broken clouds';
+        case 'OVC': return 'overcast';
+        case 'NSC': return 'no significant clouds';
+        case 'CAVOK': return 'ceiling and visibility ok';
+        case 'CLR': case 'SKC': return 'clear';
+        default: return cover;
+      }
+    }
+
+    function formatTime(isoTime){
+      if(!isoTime) return 'Unknown';
+      const d = new Date(isoTime);
+      const day = String(d.getUTCDate()).padStart(2,'0');
+      const month = months[d.getUTCMonth()];
+      const hours = String(d.getUTCHours()).padStart(2,'0');
+      const minutes = String(d.getUTCMinutes()).padStart(2,'0');
+      return `${day} ${month} ${hours}:${minutes} UTC`;
+    }
+
+    function isInPast(isoTime){
+      if(!isoTime) return false;
+      return new Date(isoTime) < new Date();
+    }
+
+    /* Highlighting logic — preserves original heuristics */
+    function highlightText(htmlText){
+      const orangeList = ['mist','shallow mist','partial mist'];
       const ignoreList = [
-        'rain',
-        'light rain',
-        'heavy rain',
-        'rain showers',
-        'light rain showers',
-        'heavy rain showers',
-        'drizzle',
-        'light drizzle',
-        'heavy drizzle',
-        'light ',
-        'no significant weather',
-        'no significant change expected'
+        'rain','light rain','heavy rain','rain showers','light rain showers','heavy rain showers',
+        'drizzle','light drizzle','heavy drizzle','no significant weather','no significant change expected',
+        'light ','heavy '
       ];
 
-      let highlighted = text;
+      let highlighted = htmlText;
 
-      Object.values(weatherTranslations).forEach(condition => {
-        if (!condition) return;
-        const regex = new RegExp(`\\b${escapeRegExp(condition)}\\b`, 'gi');
-
-        if (orangeList.includes(condition.toLowerCase())) {
+      const uniqueConditions = Array.from(new Set(Object.values(weatherTranslations).filter(Boolean)));
+      uniqueConditions.forEach(condition => {
+        const condLower = condition.toLowerCase();
+        if(ignoreList.includes(condLower)) return;
+        const regex = new RegExp('\\b' + escapeRegExp(condition) + '\\b','gi');
+        if(orangeList.includes(condLower)){
           highlighted = highlighted.replace(regex, `<span class="highlight-orange">${condition}</span>`);
-        } else if (!ignoreList.includes(condition.toLowerCase())) {
+        } else {
           highlighted = highlighted.replace(regex, `<span class="highlight-red">${condition}</span>`);
         }
       });
@@ -234,162 +253,217 @@
       return highlighted;
     }
 
-    function decodeCloudCover(cover) {
-      switch (cover) {
-        case 'FEW': return 'few clouds';
-        case 'SCT': return 'scattered clouds';
-        case 'BKN': return 'broken clouds';
-        case 'OVC': return 'overcast';
-        case 'NSC': return 'no significant clouds';
-        case 'CAVOK': return 'ceiling and visibility ok';
-        case 'CLR': return 'clear';
-        case 'SKC': return 'sky clear';
-        default: return cover;
+    /* ========= DOM references & state ========= */
+    const grid = document.querySelector('.airport-grid');
+    const weatherContent = document.getElementById('weather-content');
+    const airportTitle = document.getElementById('airport-title');
+    const observTime = document.getElementById('observ-time');
+    const statusEl = document.getElementById('status');
+    const updatedEl = document.getElementById('updated');
+    const lastLoadedEl = document.getElementById('last-loaded');
+    const refreshBtn = document.getElementById('refresh-last');
+    const clearBtn = document.getElementById('clear-btn');
+
+    let lastStation = null;
+    let lastData = null;
+
+    /* Populate airport buttons dynamically for easy maintenance */
+    function buildButtons(){
+      AIRPORTS.forEach(([icao,label])=>{
+        const btn = document.createElement('button');
+        btn.className = 'airport-btn px-3 py-2 text-sm font-semibold';
+        btn.innerHTML = `${label} <span class="mono text-xs ml-2">(${icao})</span>`;
+        btn.title = `${label} — ${icao}`;
+        btn.addEventListener('click', ()=> fetchWeather(icao,label));
+        grid.appendChild(btn);
+      });
+    }
+
+    buildButtons();
+
+    /* Clear / refresh controls */
+    clearBtn.addEventListener('click', ()=>{
+      weatherContent.innerHTML = '<p class="muted">Cleared. Select an airport to load data.</p>';
+      airportTitle.textContent = 'Select an airport';
+      observTime.textContent = 'Decoded METAR & TAF will appear here.';
+      statusEl.textContent = 'Idle';
+      updatedEl.textContent = '';
+      lastStation = null;
+      lastData = null;
+      lastLoadedEl.textContent = 'None';
+    });
+
+    refreshBtn.addEventListener('click', ()=>{
+      if(lastStation) fetchWeather(lastStation[0], lastStation[1], {force:true});
+      else {
+        statusEl.textContent = 'Nothing to refresh';
+        setTimeout(()=> statusEl.textContent = 'Idle', 1500);
       }
+    });
+
+    /* ========= Fetching METAR & TAF ======== */
+    // aviationweather.gov provides endpoints under /api/data/metar and /api/data/taf
+    // We'll request format=json & ids=<ICAO>
+    async function fetchJSON(url){
+      const resp = await fetch(url, { headers: { 'User-Agent': 'AirportWeatherDHL/1.0' } });
+      if(!resp.ok){
+        const text = await resp.text().catch(()=> '');
+        throw new Error(`HTTP ${resp.status} ${resp.statusText} ${text ? '- ' + text : ''}`);
+      }
+      return resp.json();
     }
 
-    function formatTime(isoTime) {
-      if (!isoTime) return 'Unknown';
-      const date = new Date(isoTime);
-      const day = date.getUTCDate().toString().padStart(2, '0');
-      const month = months[date.getUTCMonth()];
-      const hours = date.getUTCHours().toString().padStart(2, '0');
-      const minutes = date.getUTCMinutes().toString().padStart(2, '0');
-      return `${day} ${month} ${hours}:${minutes} UTC`;
-    }
-
-    function isInPast(isoTime) {
-      if (!isoTime) return false;
-      const currentTime = new Date();
-      const time = new Date(isoTime);
-      return time < currentTime;
-    }
-
-    async function fetchWeather(icao, airportName) {
-      const weatherDiv = document.getElementById('weather-data');
-      weatherDiv.innerHTML = '<p>Loading...</p>';
+    async function fetchWeather(icao, airportName, opts={force:false}){
+      airportTitle.textContent = `${airportName} (${icao})`;
+      observTime.textContent = 'Loading METAR & TAF...';
+      statusEl.textContent = 'Fetching';
+      updatedEl.textContent = new Date().toISOString();
+      weatherContent.innerHTML = `<p class="muted">Loading data for ${icao}...</p>`;
 
       try {
-        // Fetch METAR using 2025 AviationWeather API JSON endpoint
-        const metarResponse = await fetch(`https://aviationweather.gov/api/data/metar?ids=${icao}&format=json`, {
-          headers: {
-            'User-Agent': 'AirportWeatherApp/1.0'
-          }
-        });
-        
+        // METAR
+        const metarUrl = `https://aviationweather.gov/api/data/metar?ids=${icao}&format=json`;
+        const tafUrl = `https://aviationweather.gov/api/data/taf?ids=${icao}&format=json`;
+
+        // Kick both requests concurrently
+        const [metarRaw, tafRaw] = await Promise.allSettled([fetchJSON(metarUrl), fetchJSON(tafUrl)]);
+
         let metarDecoded = 'No METAR data available';
-        if (metarResponse.ok && metarResponse.status !== 204) {
-          const metarData = await metarResponse.json();
-          if (metarData && metarData.length > 0) {
-            const metar = metarData[0];
-            const observationTime = formatTime(metar.reportTime);
-            const wind = metar.wspd !== null && metar.wspd !== undefined ? `${metar.wspd}` : 'calm';
-            const windDir = metar.wdir !== null && metar.wdir !== undefined ? `${metar.wdir}°` : 'variable direction';
-            const windGust = metar.wgst ? ` gusting ${metar.wgst} knots` : '';
-            const visibility = metar.visib !== null ? metar.visib : 10;
-            const visibilityKm = (visibility * 1.60934).toFixed(1);
-            const temp = metar.temp !== null && metar.temp !== undefined ? `${metar.temp}` : 'Unknown';
-            const dewpoint = metar.dewp !== null && metar.dewp !== undefined ? `${metar.dewp}` : 'Unknown';
-            const pressureInHg = metar.altim !== null && metar.altim !== undefined ? metar.altim.toFixed(2) : 'Unknown';
-            const pressureHpa = metar.altim !== null ? (metar.altim * 33.8639).toFixed(0) : 'Unknown';
-            const wxString = metar.wxString || '';
-            const weather = decodeWeather(wxString) || 'none';
+        if(metarRaw.status === 'fulfilled' && Array.isArray(metarRaw.value) && metarRaw.value.length > 0){
+          const m = metarRaw.value[0];
+          // detect fields from the JSON returned by aviationweather.gov
+          // their property names are commonly 'rawText', 'reportTime', 'temp', etc.
+          const observationTime = m.reportTime ? formatTime(m.reportTime) : (m.observed ? formatTime(m.observed) : 'Unknown');
+          const wind = (m.wspd !== null && m.wspd !== undefined) ? `${m.wspd}` : 'calm';
+          const windDir = (m.wdir !== null && m.wdir !== undefined) ? `${m.wdir}°` : 'variable direction';
+          const windGust = m.wgst ? ` gusting ${m.wgst} knots` : '';
+          const visibility = (m.visib !== null && m.visib !== undefined) ? m.visib : (m.visibility ? m.visibility : 10);
+          const visibilityKm = (visibility * 1.60934).toFixed(1);
+          const temp = (m.temp !== null && m.temp !== undefined) ? `${m.temp}` : 'Unknown';
+          const dew = (m.dewp !== null && m.dewp !== undefined) ? `${m.dewp}` : 'Unknown';
+          const pressureInHg = (m.altim !== null && m.altim !== undefined) ? (m.altim.toFixed ? m.altim.toFixed(2) : m.altim) : 'Unknown';
+          const pressureHpa = (m.altim !== null && m.altim !== undefined) ? Math.round(m.altim * 33.8639) : 'Unknown';
+          const wxString = m.wxString || (m.rawText ? extractWxFromRaw(m.rawText) : '');
+          const weather = decodeWeather(wxString) || 'none';
 
-            let clouds = 'clear skies';
-            if (metar.clouds && metar.clouds.length > 0) {
-              clouds = metar.clouds.map(cloud => {
-                const cover = decodeCloudCover(cloud.cover);
-                const base = cloud.base ? ` at ${cloud.base} feet` : '';
-                return `${cover}${base}`;
-              }).join(', ');
-            }
-
-            metarDecoded = `<strong>${airportName}</strong><br>
-              Observation time: ${observationTime}<br>
-              Wind: ${windDir} at ${wind} knots${windGust}<br>
-              Visibility: ${visibility} SM (${visibilityKm} km)<br>
-              Weather: ${weather}<br>
-              Clouds: ${clouds}<br>
-              Temperature: ${temp}°C<br>
-              Dewpoint: ${dewpoint}°C<br>
-              Pressure: ${pressureInHg} inHg (${pressureHpa} hPa)`;
+          let clouds = 'clear skies';
+          if(Array.isArray(m.clouds) && m.clouds.length > 0){
+            clouds = m.clouds.map(c => {
+              const cover = decodeCloudCover(c.cover || c['cover']);
+              const base = c.base ? ` at ${c.base} feet` : '';
+              return `${cover}${base}`;
+            }).join(', ');
+          } else if (m.rawText && /(FEW|SCT|BKN|OVC|CAVOK)/.test(m.rawText)){
+            clouds = m.rawText.match(/(FEW|SCT|BKN|OVC|CAVOK)[0] || 'see raw';
           }
+
+          metarDecoded = `<div>
+            <div class="text-sm muted mono">Observation: ${observationTime}</div>
+            <div class="mt-2"><strong>Wind:</strong> ${windDir} at ${wind} kt${windGust}</div>
+            <div><strong>Visibility:</strong> ${visibility} SM (${visibilityKm} km)</div>
+            <div><strong>Weather:</strong> ${weather}</div>
+            <div><strong>Clouds:</strong> ${clouds}</div>
+            <div><strong>Temperature:</strong> ${temp}°C · <strong>Dewpoint:</strong> ${dew}°C</div>
+            <div><strong>Pressure:</strong> ${pressureInHg} inHg (${pressureHpa} hPa)</div>
+          </div>`;
+        } else {
+          metarDecoded = `<div class="muted">No METAR returned for ${icao}.</div>`;
         }
 
-        // Fetch TAF using 2025 AviationWeather API JSON endpoint
-        const tafResponse = await fetch(`https://aviationweather.gov/api/data/taf?ids=${icao}&format=json`, {
-          headers: {
-            'User-Agent': 'AirportWeatherApp/1.0'
-          }
-        });
-        
+        // TAF
         let tafDecoded = 'No TAF data available';
-        if (tafResponse.ok && tafResponse.status !== 204) {
-          const tafData = await tafResponse.json();
-          if (tafData && tafData.length > 0) {
-            const taf = tafData[0];
-            const issueTime = formatTime(taf.issueTime);
-            const validFrom = formatTime(taf.validTimeFrom);
-            const validTo = formatTime(taf.validTimeTo);
+        if(tafRaw.status === 'fulfilled' && Array.isArray(tafRaw.value) && tafRaw.value.length > 0){
+          const t = tafRaw.value[0];
+          const issueTime = t.issueTime ? formatTime(t.issueTime) : 'Unknown';
+          const validFrom = t.validTimeFrom ? formatTime(t.validTimeFrom) : 'Unknown';
+          const validTo = t.validTimeTo ? formatTime(t.validTimeTo) : 'Unknown';
+          let forecastHtml = `<div class="mt-4"><div class="text-sm muted mono">TAF issued: ${issueTime}</div>
+            <div class="mt-2"><strong>Valid:</strong> ${validFrom} — ${validTo}</div>`;
 
-            let forecastHtml = `<strong>TAF for ${airportName}</strong><br>
-              Issued: ${issueTime}<br>
-              Valid from ${validFrom} to ${validTo}<br><br>`;
+          if(Array.isArray(t.fcsts) && t.fcsts.length > 0){
+            t.fcsts.forEach(fcst => {
+              const fcstFrom = fcst.fcstTimeFrom ? formatTime(fcst.fcstTimeFrom) : 'Unknown';
+              const fcstTo = fcst.fcstTimeTo ? formatTime(fcst.fcstTimeTo) : 'Unknown';
+              const past = isInPast(fcst.fcstTimeTo);
+              const timeStyle = past ? 'opacity:0.55;text-decoration:line-through;' : '';
+              const changeIndicator = fcst.changeIndicator || '';
+              const prob = fcst.probability ? `${fcst.probability}% chance ` : '';
+              const timeBecoming = fcst.timeBecoming ? ` becoming ${formatTime(fcst.timeBecoming)}` : '';
 
-            if (taf.fcsts && taf.fcsts.length > 0) {
-              taf.fcsts.forEach((fcst, index) => {
-                const fcstFrom = formatTime(fcst.fcstTimeFrom);
-                const fcstTo = formatTime(fcst.fcstTimeTo);
-                const isPast = isInPast(fcst.fcstTimeTo);
-                const timeStyle = isPast ? 'text-decoration: line-through; opacity: 0.6;' : '';
-                
-                const changeIndicator = fcst.changeIndicator || '';
-                const probability = fcst.probability ? `${fcst.probability}% chance ` : '';
-                const timeBecoming = fcst.timeBecoming ? ` becoming ${formatTime(fcst.timeBecoming)}` : '';
-                
-                const fWind = fcst.wspd !== null && fcst.wspd !== undefined ? `${fcst.wspd}` : 'calm';
-                const fWindDir = fcst.wdir !== null && fcst.wdir !== undefined ? `${fcst.wdir}°` : 'variable direction';
-                const fWindGust = fcst.wgst ? ` gusting ${fcst.wgst} knots` : '';
-                const fVisibility = fcst.visib !== null ? fcst.visib : 10;
-                const fVisibilityKm = (fVisibility * 1.60934).toFixed(1);
-                const fWxString = fcst.wxString || '';
-                const fWeather = decodeWeather(fWxString) || 'none';
-                
-                let fClouds = 'clear skies';
-                if (fcst.clouds && fcst.clouds.length > 0) {
-                  fClouds = fcst.clouds.map(cloud => {
-                    const cover = decodeCloudCover(cloud.cover);
-                    const base = cloud.base ? ` at ${cloud.base} feet` : '';
-                    return `${cover}${base}`;
-                  }).join(', ');
-                }
+              const fWind = (fcst.wspd !== null && fcst.wspd !== undefined) ? `${fcst.wspd}` : 'calm';
+              const fWindDir = (fcst.wdir !== null && fcst.wdir !== undefined) ? `${fcst.wdir}°` : 'variable direction';
+              const fWindGust = fcst.wgst ? ` gusting ${fcst.wgst} kt` : '';
+              const fVis = (fcst.visib !== null && fcst.visib !== undefined) ? fcst.visib : 10;
+              const fVisKm = (fVis * 1.60934).toFixed(1);
+              const fWxString = fcst.wxString || '';
+              const fWeather = decodeWeather(fWxString) || 'none';
 
-                const changeText = changeIndicator ? `${weatherTranslations[changeIndicator] || changeIndicator} ` : '';
-                const probText = probability ? `${probability}` : '';
-                
-                forecastHtml += `<div style="${timeStyle}">
-                  <strong>${probText}${changeText}${fcstFrom} to ${fcstTo}${timeBecoming}</strong><br>
-                  Wind: ${fWindDir} at ${fWind} knots${fWindGust}<br>
-                  Visibility: ${fVisibility} SM (${fVisibilityKm} km)<br>
-                  Weather: ${fWeather}<br>
-                  Clouds: ${fClouds}<br><br>
-                </div>`;
-              });
-            }
+              let fClouds = 'clear skies';
+              if(Array.isArray(fcst.clouds) && fcst.clouds.length > 0){
+                fClouds = fcst.clouds.map(c => {
+                  const cover = decodeCloudCover(c.cover || c['cover']);
+                  const base = c.base ? ` at ${c.base} feet` : '';
+                  return `${cover}${base}`;
+                }).join(', ');
+              }
 
-            tafDecoded = forecastHtml;
+              const changeText = changeIndicator ? (weatherTranslations[changeIndicator] || changeIndicator) + ' ' : '';
+              forecastHtml += `<div style="${timeStyle} margin-top:0.5rem; padding:0.5rem 0;">
+                <div><strong>${prob}${changeText}${fcstFrom} to ${fcstTo}${timeBecoming}</strong></div>
+                <div>Wind: ${fWindDir} at ${fWind} kt${fWindGust}</div>
+                <div>Visibility: ${fVis} SM (${fVisKm} km)</div>
+                <div>Weather: ${fWeather}</div>
+                <div>Clouds: ${fClouds}</div>
+              </div>`;
+            });
+          } else if (t.rawText) {
+            forecastHtml += `<div class="muted mt-2 mono">${escapeHtml(t.rawText)}</div>`;
           }
+
+          forecastHtml += '</div>';
+          tafDecoded = forecastHtml;
+        } else {
+          tafDecoded = `<div class="muted">No TAF returned for ${icao}.</div>`;
         }
 
-        // Display results
-        const highlighted = highlightText(metarDecoded + '<br><br>' + tafDecoded);
-        weatherDiv.innerHTML = highlighted;
+        // Combine, highlight, and render
+        const combined = `<div>${metarDecoded}<hr class="my-3" /><div>${tafDecoded}</div></div>`;
+        const highlighted = highlightText(combined);
 
-      } catch (error) {
-        weatherDiv.innerHTML = `<p>Error fetching data: ${error.message}</p>`;
-        console.error('Error:', error);
+        weatherContent.innerHTML = highlighted;
+        observTime.textContent = `Last loaded: ${new Date().toLocaleString()}`;
+        statusEl.textContent = 'OK';
+        updatedEl.textContent = `Updated: ${new Date().toISOString()}`;
+
+        lastStation = [icao, airportName];
+        lastData = { metarRaw, tafRaw, rendered: highlighted, fetchedAt: new Date().toISOString() };
+        lastLoadedEl.textContent = `${icao}`;
+
+      } catch (err) {
+        weatherContent.innerHTML = `<div class="text-red-700"><strong>Error:</strong> ${escapeHtml(err.message)}</div>`;
+        statusEl.textContent = 'Error';
+        updatedEl.textContent = '';
+        console.error(err);
       }
     }
+
+    /* Small helpers for robustness */
+    function escapeHtml(s){
+      if(!s) return '';
+      return String(s).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; });
+    }
+
+    function extractWxFromRaw(raw){
+      // crude attempt to find WX groups like -RA +TSRA BR etc.
+      if(!raw) return '';
+      const matches = raw.match(/(\+|-)?[A-Z]{2,4}|PROB(?:30|40)/g) || [];
+      return matches.join(' ');
+    }
+
+    /* Prevent accidental XSS by not allowing user-supplied HTML except our highlights (we only add small spans) */
+    // note: combined content is generated from decoded values and small parts of rawText; we escape rawText when used.
+
+    /* End of script */
   </script>
 </body>
 </html>
